@@ -1,6 +1,6 @@
-.App {
+/* .App {
   text-align: center;
-}
+} */
 
 .App-logo {
   height: 40vmin;
@@ -36,3 +36,108 @@
     transform: rotate(360deg);
   }
 }
+
+/** Updates */
+.app-header {
+  min-height: 90px;
+  padding-left: 19px;
+  padding-right: 19px;
+  color:#f4f4f4;
+  background-color: #001141;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  z-index:1100;
+
+  position: fixed;
+  top: 0;
+  width: 100%
+}
+
+.app-title {
+  font-size: 2rem;
+  font-weight: bold;
+  font-variant: small-caps;
+}
+
+.app-content {
+  margin-left: 19px;
+  padding-top: 90px;
+}
+
+.app-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  row-gap: 19px;
+  column-gap: 19px;
+}
+
+.app-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  /* row-gap: 5px; */
+  /* column-gap: 5px; */
+}
+
+.time-column {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  row-gap: 5px;
+  column-gap: 5px;
+}
+
+.time-block {
+  /* margin: 0 5px 0 5px; */
+  /* margin: 5px; */
+  padding: 5px;
+  border-style: solid;
+  border-width: 1px;
+  cursor: pointer;
+  /* padding-top: 90px; */
+}
+
+.time-block-selected {
+  /* margin: 5px; */
+  padding: 5px;
+  border-style: solid;
+  border-width: 1px;
+  background-color: #a6c8ff;
+  cursor: pointer;
+}
+
+.time-selected {
+  background-color: #a6c8ff;
+}
+.time-unselected {
+
+}
+
+.time-range {
+  font-family: monospace;
+}
+
+del {
+  color: #c6c6c6;  /* Gray-40 */
+}
+
+.error {
+  color: #da1e28;  /* Alert 60 */
+}
+
+.warn {
+  color: #f1c21b;  /* Alert 30 */
+}
+
+/** 
+ CSS Breakpoints example:
+ https://github.ibm.com/EDA/login-server/blob/master/client/views/bluegroups.pug
+*/
+
