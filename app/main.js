@@ -41,11 +41,14 @@ function createWindow () {
 
   // and load the index.html of the app.
   // mainWindow.loadFile('index.html')
-  mainWindow.loadURL(
-    isDev
-    ? 'http://localhost:3000'
-    : `file://${path.join(__dirname, '../build/index.html')}`
-  )
+  // mainWindow.loadURL(
+  //   isDev
+  //   ? 'http://localhost:3000'
+  //   : `file://${path.join(__dirname, '../build/index.html')}`
+  // )
+  isDev 
+    ? mainWindow.loadURL('http://localhost:3000')
+    : mainWindow.loadFile('build/index.html')
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
