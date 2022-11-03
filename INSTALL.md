@@ -47,6 +47,10 @@ https://reactjs.org/docs/conditional-rendering.html
 - useEffect hook:
     https://reactjs.org/docs/hooks-effect.html
 
+- https://create-react-app.dev/docs/deployment#building-for-relative-paths
+  "homepage": ".",
+
+
 
 # Material Notes & References
 https://mui.com/material-ui/react-text-field/

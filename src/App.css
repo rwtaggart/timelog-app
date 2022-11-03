@@ -141,3 +141,24 @@ del {
  https://github.ibm.com/EDA/login-server/blob/master/client/views/bluegroups.pug
 */
 
+table {
+  border: none;
+  border-spacing: 19px 10px;
+}
+
+td {
+  margin: 12px 0 0 0;
+}
+
+tr {
+  margin: 0 12px 0 0;
+}
+
+th {
+  text-align: left;
+}
+
+/* .theader {
+  /* This doesn't create a solid background across the whole table header row. *
+  background-color: #a6c8ff; /* Blue-30 *
+} */

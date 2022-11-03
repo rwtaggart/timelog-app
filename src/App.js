@@ -20,7 +20,7 @@ import format from 'date-fns/format'
 import { parseTime, parseDate, dateFmt, timeFmt, writeData } from './utils.js'
 
 // import { categories, topics } from './constants.js'
-import { ViewTimeLog, EditTimeBlock, resetTimeRecord, NullTime, TimeZeros } from './TimeBlock.js'
+import { ViewTimeLogTable, EditTimeBlock, resetTimeRecord, NullTime, TimeZeros } from './TimeBlock.js'
 
 
 function App() {
@@ -111,7 +111,7 @@ function App() {
           label="edit mode" 
         /> */}
         <br />
-        <ViewTimeLog log={timesLog} />
+        <ViewTimeLogTable log={timesLog} />
         <br />
         {editMode != 'view' && <EditTimeBlock addTimeRecord={addTimeRecord} initTimeRecord={resetTimeRecord()} />}
         <br />
@@ -129,7 +129,9 @@ function App() {
               <li><del>Add entry widgets</del></li>
               <li><del>Add submit button</del></li>
               <li><del>Add input validation</del></li>
-              <li>Add checkboxes for categories and topics</li>
+              <li><del>Add checkboxes for categories</del></li>
+              <li><del>Add checkboxes for topics</del></li>
+              <li>Set duration from start & end</li>
               <li><del>Add app state and add record mechanism</del></li>
               <li><del>Render list of logged records</del></li>
               <li>Maintain list of "active" records (no end time)</li>
@@ -137,6 +139,11 @@ function App() {
               <li><del>Add current date when creating a new record</del></li>
               <li>Add current time when creating a new record</li>
               <li>Add duration format and blank name validation</li>
+              <li>Add "break" button</li>
+              <li>Add edit button to each time log record</li>
+              <li>Automatically order based on start time</li>
+              <li>Use Grid to render time log view</li>
+              <li>Use Cards for each row?</li>
             </ul>
         </span>
       </main>
