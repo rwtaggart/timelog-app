@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -11,9 +12,16 @@ import RadioGroup from '@mui/material/RadioGroup';
 import FormLabel from '@mui/material/FormLabel';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
+import IconButton from '@mui/material/IconButton';
 // import Tooltip from '@mui/material/Tooltip';
 // import IconButton from '@mui/material/IconButton';
 // import CopyIcon from '@mui/icons-material/ContentCopy';
+import ReplayIcon from '@mui/icons-material/Replay';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
+
 import GitHubIcon from '@mui/icons-material/GitHub';
 import setDT from 'date-fns/set'
 import format from 'date-fns/format'
@@ -24,9 +32,13 @@ import { ViewTimeLogTable, EditTimeBlock, resetTimeRecord, NullTime, TimeZeros }
 
 
 function App() {
+  /** TODO: Move all "show" boolean settings into a single object **/
   const [ isDev, setIsDev ] = useState(() => isDevFnc())
+  const [ isShowSettings, setIsShowSettings ] = useState(false)
+  const [ isShowTodo, setIsShowToDo ] = useState(false)
   const [ session_id, setSessionId ] = useState("")
   const [ editMode, setEditMode ] = useState("view")
+  const [ showEditModeSw, setShowEditModeSw ] = useState(false)
   const [ timesLog, settimesLog ] = useState([])  // QUESTION: useReducer() instead?
   const darkTheme = createTheme({
     palette: {
@@ -92,29 +104,30 @@ function App() {
               {isDev && <span>(dev)</span>}
             </div>
             <FormControl>
-              <FormLabel>Edit Mode</FormLabel>
-              <RadioGroup row
-                value={editMode}
-                onChange={(e) => setEditMode(e.target.value)}
-              >
-                <FormControlLabel value="view"        control={<Radio />} label="view"        />
-                <FormControlLabel value="single edit" control={<Radio />} label="single edit" />
-                <FormControlLabel value="bulk edit"   control={<Radio />} label="bulk edit"   />
-              </RadioGroup>
+            {/* <span onClick={() => setShowEditModeSw(prevFlag => !prevFlag)}>Edit Mode: </span> */}
+              <FormLabel onClick={() => setShowEditModeSw(prevFlag => !prevFlag)}>Edit Mode: {showEditModeSw || editMode}</FormLabel>
+              { showEditModeSw &&
+                <RadioGroup row
+                    value={editMode}
+                    onChange={(e) => setEditMode(e.target.value)}
+                  >
+                    <FormControlLabel value="view"        control={<Radio />} label="view"        />
+                    <FormControlLabel value="single edit" control={<Radio />} label="single edit" />
+                    <FormControlLabel value="bulk edit"   control={<Radio />} label="bulk edit"   />
+                  </RadioGroup>
+              }
             </FormControl>
             {/* <Button onClick={handleWriteData}>STORE DATA</Button> */}
-            <TextField
-              // error={ errors.start }
-              id="standard-basic"
-              variant="standard"
-              label="Session ID"  
-              value={session_id}
-              onChange={(e) => {setSessionId(e.target.value)}}
-              // onKeyPress={handleKeyPress}
-              // onBlur={(e) => setSessionId(e.target.value)}
-              // helperText="mm:ss (am/pm)"
-            />
-            <Button onClick={handleReloadData}>RELOAD</Button>
+            <Box>
+              <IconButton onClick={handleReloadData}>
+                <ReplayIcon />
+              </IconButton>
+              <IconButton onClick={() => setIsShowSettings(prevFlag => !prevFlag)}>
+                {/* FIX ME: Color switch not working... ? */}
+                {/* <SettingsIcon color={ isShowSettings ? "action" : "secondary" } /> */}
+                <SettingsIcon color="" />
+              </IconButton>
+            </Box>
           </Stack>
           {/* <GitHubIcon onClick={e =>  window.location.href=''} /> */}
           {/* <span fixme="hack: why do we need this ??"/> */}
@@ -126,6 +139,21 @@ function App() {
           }
           label="edit mode" 
         /> */}
+        {isShowSettings && 
+          <FormControl id="settings-form">
+            <TextField
+                // error={ errors.start }
+                id="standard-basic"
+                variant="standard"
+                label="Session ID"  
+                value={session_id}
+                onChange={(e) => {setSessionId(e.target.value)}}
+                // onKeyPress={handleKeyPress}
+                // onBlur={(e) => setSessionId(e.target.value)}
+                // helperText="mm:ss (am/pm)"
+              />
+          </FormControl>
+        }
         <br />
         <ViewTimeLogTable log={timesLog} />
         <br />
@@ -137,7 +165,18 @@ function App() {
         <span>{JSON.stringify(timesLog)}</span>
         <br />
         <br /> */}
-        <span>
+        { isShowTodo
+          ? <Button onClick={() => {setIsShowToDo(prevFlag => !prevFlag)}}>
+              Hide ToDos
+              <ExpandLessIcon />
+            </Button>
+
+          : <Button onClick={() => {setIsShowToDo(prevFlag => !prevFlag)}}>
+              Show ToDos
+              <ExpandMoreIcon />
+            </Button>
+        }
+        { isShowTodo && <span>
           {/* TODO: TAKE THIS OUT */}
           <h1>ToDo:</h1>
             <Stack direction="row">
@@ -178,6 +217,7 @@ function App() {
               {/* <li></li> */}
               {/* <li><del></del></li> */}
         </span>
+      }
       </main>
     </div>
   );
