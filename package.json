@@ -13,6 +13,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "date-fns": "^2.29.3",
+    "minimist": "^1.2.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -24,6 +25,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev": "DEV=1 concurrently -k \"BROWSER=none npm start\" \"npm:electron\"",
+    "devnob": "BROWSER=none npm start",
+    "devel": "DEV=1 electron .",
     "electron": "wait-on tcp:3000 && electron ."
   },
   "eslintConfig": {

@@ -30,6 +30,11 @@ contextBridge.exposeInMainWorld('mainAPI', {
   write: (data) => ipcRenderer.send('write', data),
 })
 
+contextBridge.exposeInMainWorld('appMeta', {
+  isDev: () => ipcRenderer.invoke('appMeta:isDev')
+})
+
 contextBridge.exposeInMainWorld('dataStore', {
-  write: (session_id, data) => ipcRenderer.invoke('datastore:write', session_id, data)
+  write: (session_id, data) => ipcRenderer.invoke('datastore:write', session_id, data),
+  load:  (session_id) => ipcRenderer.invoke('datastore:load', session_id)
 })
