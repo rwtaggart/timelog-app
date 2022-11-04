@@ -1,5 +1,6 @@
 /**
  * Constants to use for the app
+ * TODO: Load this from a file. Set these as defaults.
  */
 
 export const categories = [
