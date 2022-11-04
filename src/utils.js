@@ -1,5 +1,8 @@
 /**
  * Utility Methods
+ * TODO: split into:
+ *  - dtutils.js -- for DateTime utilities
+ *  - api.js     -- for API calls and stuff
  */
 
 /* TIME & DATE UTILS */
@@ -39,9 +42,24 @@ class ElectronError extends Error {
   }
 }
 
-export async function writeData(session_id, data) {
-  if ( !window.dataStore ) {
+export function hasAPI(name) {
+  if ( window[name] == null) {
     throw new ElectronError('Electron APIs are not available!')
   }
+  return true
+}
+
+export async function writeData(session_id, data) {
+  hasAPI('dataStore')
   return await window.dataStore.write(session_id, data)
+}
+
+export async function loadData(session_id) {
+  hasAPI('dataStore')
+  return await window.dataStore.load(session_id)
+}
+
+export async function isDev(){
+  hasAPI('appMeta')
+  return await window.appMeta.isDev()
 }

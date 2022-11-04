@@ -2,8 +2,13 @@
 const {app, BrowserWindow, ipcMain} = require('electron')
 const path = require('path')
 const fs = require('fs')
+const parseArgs = require('minimist')
+
 const appUtils = require('./app_utils.js')
 
+console.log('(D): Running main.js ...')
+
+/** Utilities  **/
 function parseBool(s) {
   if (s == null) { return s; }
   if (typeof(s) === 'string' ) { s = s.trim().toLowerCase() }
@@ -12,6 +17,36 @@ function parseBool(s) {
     default: return false;
   }
 }
+
+/** PARSE ARGS **/
+const HELP_MSG = 'USAGE: npx electron . [OPTIONS] \n\
+ARGS:\n\
+-d --dir  LOG_DATA_PATH   Path to output log data directory\n\
+'
+
+const opts = {
+  boolean: ['help'],
+  string: ['dir', 'prefix'],
+  alias: {
+    'help': 'h', 
+    'dir': 'd', 
+    'prefix':'p'
+  },
+}
+const args = parseArgs(process.argv.slice(2), opts)
+if (args.help) {
+  console.log(HELP_MSG)
+  process.exit(0)
+}
+if (args.dir != null && args.dir !== "") {
+  appUtils.setOutDirName(args.dir)
+}
+if (args.prefix != null && args.prefix !== "") {
+  appUtils.setSessionPrefix(args.prefix)
+}
+console.log(`(I): Using output dir: "${appUtils.getOutDirName()}"`)
+
+/** MAIN **/
 const isDev = parseBool(process.env['DEV'])
 appUtils.checkOutDir().catch((err) => {
   console.error('(E) [main]: ', err.message)
@@ -59,9 +94,11 @@ function createWindow () {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   console.log('(D): whenRead(): ', appUtils, appUtils.writeDataJSON)
+  ipcMain.handle('appMeta:isDev', () => isDev)
   ipcMain.handle('datastore:write', appUtils.writeDataJSON)
+  ipcMain.handle('datastore:load',  appUtils.loadDataJSON)
   createWindow()
-
+x
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.

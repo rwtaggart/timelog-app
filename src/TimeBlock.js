@@ -313,6 +313,8 @@ export function ViewTimeLogTable(props) {
   const { log } = props
   return (
     <table>
+      {/* thead and tbody break the rendering for some reason... */}
+      {/* <thead> */}
       <tr className='theader'>
         <th>Date</th>
         <th>Start</th>
@@ -321,21 +323,24 @@ export function ViewTimeLogTable(props) {
         <th>Name</th>
         <th>Categories</th>
       </tr>
-      {log.map((record) => 
-        // <Paper>
-          <tr key={ record.start + record.end }>
-            <>
-              <td>{record.date}</td>
-              <td>{record.start}</td>
-              <td>{record.end}</td>
-              {/* <td>{record.duration}</td> */}
-              <td>{record.name}</td>
-              {/* <td>{record.categories.join(',')}</td> */}
-              <td>{record.categories.map(cat => <Chip label={cat} variant="outlined" />)}</td>
-            </>
-          </tr>
-        // </Paper>
-      )}
+      {/* </thead> */}
+        {/* <tbody> */}
+        {log.map((record) => 
+          // <Paper>
+            <tr key={ record.start + record.end }>
+              <>
+                <td>{record.date}</td>
+                <td>{record.start}</td>
+                <td>{record.end}</td>
+                {/* <td>{record.duration}</td> */}
+                <td>{record.name}</td>
+                {/* <td>{record.categories.join(',')}</td> */}
+                <td>{record.categories.map(cat => <Chip label={cat} variant="outlined" />)}</td>
+              </>
+            </tr>
+          // </Paper>
+        )}
+        {/* </tbody> */}
     </table>
   )
 }
