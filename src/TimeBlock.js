@@ -54,10 +54,14 @@ export const NullTime = {
   topic: [],
 }
 
-export const resetTimeRecord = () => {
+export const resetTimeRecord = (initStart, isInitEnd, tl) => {
+  const now = timeFmt(new Date())
   let timeRecord = {...NullTime}
   timeRecord.date = dateFmt(setDT(new Date(), TimeZeros))
-  timeRecord.start = timeFmt(new Date())
+  timeRecord.start = initStart != null ? initStart : now
+  if (isInitEnd && now !== timeRecord.start) {
+    timeRecord.end = now
+  }
   return timeRecord
 }
 

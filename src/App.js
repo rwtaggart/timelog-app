@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+import isBefore from 'date-fns/isBefore'
+
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -23,9 +25,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import setDT from 'date-fns/set'
-import format from 'date-fns/format'
-import { parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, isDev as isDevFnc } from './utils.js'
+import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, isDev as isDevFnc } from './utils.js'
 
 // import { categories, topics } from './constants.js'
 import { ViewTimeLogTable, EditTimeBlock, resetTimeRecord, NullTime, TimeZeros } from './TimeBlock.js'
@@ -49,6 +49,12 @@ function App() {
   const addTimeRecord = (timeRecord) => {
     settimesLog(prevTimesLog => {
       const updateTimesLog = [...prevTimesLog, timeRecord]
+      updateTimesLog.sort((a, b) => (
+        isBefore(
+          parseDateTime(a.date, a.start), 
+          parseDateTime(b.date, b.start)
+        ) ? -1 : 1
+      ))
       writeData(session_id, updateTimesLog)
       return updateTimesLog
     })
@@ -157,7 +163,19 @@ function App() {
         <br />
         <ViewTimeLogTable log={timesLog} />
         <br />
-        {editMode != 'view' && <EditTimeBlock addTimeRecord={addTimeRecord} initTimeRecord={resetTimeRecord()} />}
+        { editMode != 'view' 
+          && <EditTimeBlock 
+                addTimeRecord={addTimeRecord} 
+                initTimeRecord={
+                  // TODO: Stuff this logic into TimeBlock.js
+                  resetTimeRecord(
+                    timesLog.length > 0
+                      ? timesLog[timesLog.length -1].end
+                      : null,
+                    timesLog.length > 0,
+                  )
+                }
+             />}
         <br />
         <br />
         {/* <h1>DEBUG</h1>
@@ -194,6 +212,7 @@ function App() {
                 <li><del>Save on every update</del></li>
                 <li><del>Set output dir from arguments</del></li>
                 <li><del>Use "today" file on start. Enable re-load file from disk.</del></li>
+                <li><del>Automatically order based on start time</del></li>
               </ul>
               <ul>
                 <li>Fix isDev (dev) header label</li>
@@ -207,7 +226,6 @@ function App() {
                 <li>Add "break" button</li>
                 <li>Add edit button to each time log record</li>
                 <li>Render TextField when click on a cell in the table log view</li>
-                <li>Automatically order based on start time</li>
                 <li>Use Cards for each row?</li>
               </ul>
               <li><del></del></li>
