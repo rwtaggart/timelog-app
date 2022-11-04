@@ -3,6 +3,7 @@
  *  For writing data out with date/time stamps, etc.
  */
 const path = require('path')
+const os = require('os')
 const fs = require('fs')
 const { format } = require('date-fns')
 
@@ -30,12 +31,12 @@ class OutputDirectoryMissingError extends Error {
 
 // TODO: use ~/.config/timelog/logs as the default now.
 const DEFAULT_SESSION_PREFIX = (process.env['PREFIX'] != null) ? process.env['PREFIX'] : 'timelog'
-const DEFAULT_OUT_DIR_NAME = (process.env['OUT_DIR_NAME'] != null) 
+const DEFAULT_OUT_DIR_NAME = (process.env['OUT_DIR_NAME'] != null)
   ? process.env['OUT_DIR_NAME'] 
-  : './timelog/logs'
-  // : (process.env['DEV'] == null)
-  //   ? path.join('~/.config/timelog/logs')  // FIXME: broken... why?
-  //   : './timelog/logs'
+  // : './timelog/logs'
+  : (process.env['DEV'] == null)
+    ? path.join(os.homedir(), '.config/timelog/logs')  // FIXME: broken... why?
+    : './timelog/logs';
 let sessionPrefix = DEFAULT_SESSION_PREFIX
 let outDirName = DEFAULT_OUT_DIR_NAME
 

@@ -6,6 +6,7 @@
 
 import React, {useState} from 'react';
 import { styled } from '@mui/material/styles';
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
@@ -83,16 +84,31 @@ export function Categories(props) {
     }
   }
   return (
-    <Stack>
+    // Stack Method
+    // <Stack direction="row">
+    //   {categories.map(name =>
+    //     // <Checkbox key={'cat'+name+'cb'} checked={isChecked[name]} onChange={handleChange(name)} />
+    //     <FormControlLabel
+    //       key={'cat'+name+'fc'}
+    //       label={name} 
+    //       control={ <Checkbox key={'cat'+name+'cb'} checked={isChecked[name]} onChange={handleChange(name)} /> } 
+    //     />
+    //     )}
+    // </Stack>
+    
+    //Grid Method
+    <Grid container spacing={1}>
       {categories.map(name =>
         // <Checkbox key={'cat'+name+'cb'} checked={isChecked[name]} onChange={handleChange(name)} />
-        <FormControlLabel
-          key={'cat'+name+'fc'}
-          label={name} 
-          control={ <Checkbox key={'cat'+name+'cb'} checked={isChecked[name]} onChange={handleChange(name)} /> } 
-        />
+        <Grid item>
+          <FormControlLabel
+            key={'cat'+name+'fc'}
+            label={name} 
+            control={ <Checkbox key={'cat'+name+'cb'} checked={isChecked[name]} onChange={handleChange(name)} /> } 
+          />
+        </Grid>
         )}
-    </Stack>
+    </Grid>
   )
 }
 
@@ -180,65 +196,67 @@ export function EditTimeBlock(props) {
 
   return (
     <>
-    <Stack direction="row" spacing={1}>
-        <span>
-          { dateFmt(parseDate(time.date)) }
-        </span>
-        <TextField
-          error={ errors.start }
-          id="standard-basic"
-          variant="standard"
-          label="start"  
-          value={time.start}
-          onChange={handleTextChange("start")}
-          onKeyPress={handleKeyPress}
-          onBlur={validateTimeInput("start")}
-          helperText="mm:ss (am/pm)"
-        />
-        <TextField
-          error={ errors.end }
-          id="standard-basic"
-          variant="standard"
-          label="end"
-          value={time.end}
-          onChange={handleTextChange("end")}
-          onKeyPress={handleKeyPress}
-          onBlur={validateTimeInput("end")}
-          helperText="mm:ss (am/pm)"
-        />
-        {/* <TextField
-          id="standard-basic"
-          variant="standard"
-          label="duration"
-          value={time.duration}
-          onChange={handleTextChange("duration")}
-          onKeyPress={handleKeyPress}
-          helperText="e.g., 4h 30m 10s"
-        /> */}
-        <TextField
-          id="standard-basic"
-          variant="standard"
-          label="name"
-          value={time.name}
-          onChange={handleTextChange("name")}
-          onKeyPress={handleKeyPress}
-        />
-        <TextField
-          id="standard-basic"
-          variant="standard"
-          label="description"
-          value={time.description}
-          onChange={handleTextChange("description")}
-          onKeyPress={handleKeyPress}
-        />
-        <Tooltip title="Add">
-          <IconButton onClick={handleSubmit}>
-            <AddCircleIcon />
-          </IconButton>
-        </Tooltip>
-        <Categories selected={time.categories} setSelected={handleCategoryChange}/>
-    </Stack>
-    {isShowErrMsg && <span className="error">Time format is invalid</span>}
+    <Box>
+      <Stack direction="row" spacing={1}>
+          <span>
+            { dateFmt(parseDate(time.date)) }
+          </span>
+          <TextField
+            error={ errors.start }
+            id="standard-basic"
+            variant="standard"
+            label="start"  
+            value={time.start}
+            onChange={handleTextChange("start")}
+            onKeyPress={handleKeyPress}
+            onBlur={validateTimeInput("start")}
+            helperText="mm:ss (am/pm)"
+          />
+          <TextField
+            error={ errors.end }
+            id="standard-basic"
+            variant="standard"
+            label="end"
+            value={time.end}
+            onChange={handleTextChange("end")}
+            onKeyPress={handleKeyPress}
+            onBlur={validateTimeInput("end")}
+            helperText="mm:ss (am/pm)"
+          />
+          {/* <TextField
+            id="standard-basic"
+            variant="standard"
+            label="duration"
+            value={time.duration}
+            onChange={handleTextChange("duration")}
+            onKeyPress={handleKeyPress}
+            helperText="e.g., 4h 30m 10s"
+          /> */}
+          <TextField
+            id="standard-basic"
+            variant="standard"
+            label="name"
+            value={time.name}
+            onChange={handleTextChange("name")}
+            onKeyPress={handleKeyPress}
+          />
+          <TextField
+            id="standard-basic"
+            variant="standard"
+            label="description"
+            value={time.description}
+            onChange={handleTextChange("description")}
+            onKeyPress={handleKeyPress}
+          />
+          <Tooltip title="Add">
+            <IconButton onClick={handleSubmit}>
+              <AddCircleIcon />
+            </IconButton>
+          </Tooltip>
+      </Stack>
+      <Categories selected={time.categories} setSelected={handleCategoryChange}/>
+      {isShowErrMsg && <span className="error">Time format is invalid</span>}
+    </Box>
     </>
   )
 }
