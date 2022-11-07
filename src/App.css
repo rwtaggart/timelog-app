@@ -136,6 +136,11 @@ del {
   color: #f1c21b;  /* Alert 30 */
 }
 
+.missing {
+  color: #ff832b; /* Alert 40 */
+  /* font-weight: bold; */
+}
+
 /** 
  CSS Breakpoints example:
  https://github.ibm.com/EDA/login-server/blob/master/client/views/bluegroups.pug

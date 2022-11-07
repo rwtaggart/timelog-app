@@ -22,7 +22,7 @@ import setDT from 'date-fns/set'
 import formatDuration from 'date-fns/formatDuration'
 import formatDistance from 'date-fns/formatDistance'
 
-import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, durationFmt, } from './utils.js'
+import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, durationFmt, fuzzyIntervalOverlap} from './utils.js'
 // import { categories } from './constants.js'
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -347,6 +347,27 @@ export function ViewTimeLogGrid(props) {
   )
 }
 
+function LogGap(props) {
+  const {record, idx, all} = props
+  let prevIdx = (idx > 0 && idx < all.length - 1) ? idx-1 : 0 // FIXME: BROKEN.
+  console.log('(D): LogGap: ', record.start, idx, prevIdx, fuzzyIntervalOverlap(record, all[prevIdx]))
+  return (
+    ((idx > 0 && idx < all.length - 1) && !fuzzyIntervalOverlap(record, all[idx-1])) &&
+        <tr>
+          <td></td>
+          <td className="missing">{all[idx-1].end}</td>
+          <td className="missing">{record.start}</td>
+          { 
+            (idx > 0 && idx < all.length - 1)
+            ? <td className="right missing" >{durationFmt(record.date, record.start, all[idx-1].end)}</td>
+            : <td></td> 
+          }
+          <td className="missing">??</td>
+          <td></td>
+        </tr>
+  )
+}
+
 
 export function ViewTimeLogTable(props) {
   const { log } = props
@@ -364,8 +385,10 @@ export function ViewTimeLogTable(props) {
       </tr>
       {/* </thead> */}
         {/* <tbody> */}
-        {log.map((record) => 
-          // <Paper>
+        {log.map((record, idx, all) => 
+          // <Paper> -- For some reason, <tr> and <Paper> tags are not friends.
+          <>
+            <LogGap {...{record: record, idx:idx, all:all}} />
             <tr key={ record.start + record.end }>
               <>
                 <td>{record.date}</td>
@@ -376,7 +399,7 @@ export function ViewTimeLogTable(props) {
                 <td>{record.categories.map(cat => <Chip label={cat} variant="outlined" />)}</td>
               </>
             </tr>
-          // </Paper>
+          </>
         )}
         {/* </tbody> */}
     </table>
