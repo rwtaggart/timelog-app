@@ -282,34 +282,32 @@ export function EditTimeBlock(props) {
   )
 }
 
-/*
- *  View Time Log
- */
-export function ViewTimeLogSpan(props) {
-  const { log } = props
-
-  return (
-    <Stack spacing={1}>
-      {log.map((record) => 
-        <Stack direction="row" spacing={10} key={ record.start + record.end }>
-          <span>{record.date}      </span>
-          <span>{record.start}     </span>
-          <span>{record.end}       </span>
-          <span>{record.duration}  </span>
-          <span>{record.name}      </span>
-          <span>{JSON.stringify(record.categories)}</span>
-        </Stack>
-      )}
-    </Stack>
-  )
-}
+// /*
+//  *  View Time Log
+//  */
+// export function ViewTimeLogSpan(props) {
+//   const { log } = props
+//   return (
+//     <Stack spacing={1}>
+//       {log.map((record) => 
+//         <Stack direction="row" spacing={10} key={ record.start + record.end }>
+//           <span>{record.date}      </span>
+//           <span>{record.start}     </span>
+//           <span>{record.end}       </span>
+//           <span>{record.duration}  </span>
+//           <span>{record.name}      </span>
+//           <span>{JSON.stringify(record.categories)}</span>
+//         </Stack>
+//       )}
+//     </Stack>
+//   )
+// }
 
 export function ViewTimeLogGrid(props) {
   const { log } = props
   return (
     <Grid container spacing={1}>
       {log.map((record) => 
-        // <Item>
         <Grid container item spacing={5} key={ record.start + record.end }>
           <>
             <Grid item>
@@ -332,33 +330,23 @@ export function ViewTimeLogGrid(props) {
             </Grid>
           </>
         </Grid>
-        // </Item>
-        // <Stack direction="row" spacing={10} key={ record.start + record.end }>
-        //   <span>{record.date}      </span>
-        //   <span>{record.start}     </span>
-        //   <span>{record.end}       </span>
-        //   <span>{record.duration}  </span>
-        //   <span>{record.name}      </span>
-        //   <span>{JSON.stringify(record.categories)}</span>
-        // </Stack>
       )}
-    {/* </Stack> */}
     </ Grid>
   )
 }
 
 function LogGap(props) {
   const {record, idx, all} = props
-  let prevIdx = (idx > 0 && idx < all.length - 1) ? idx-1 : 0 // FIXME: BROKEN.
-  console.log('(D): LogGap: ', record.start, idx, prevIdx, fuzzyIntervalOverlap(record, all[prevIdx]))
+  // let prevIdx = (idx > 0) ? idx-1 : 0
+  // console.log('(D): LogGap: ', record.start, idx, prevIdx, fuzzyIntervalOverlap(record, all[prevIdx]))
   return (
-    ((idx > 0 && idx < all.length - 1) && !fuzzyIntervalOverlap(record, all[idx-1])) &&
+    (idx > 0 && !fuzzyIntervalOverlap(record, all[idx-1])) &&
         <tr>
           <td></td>
           <td className="missing">{all[idx-1].end}</td>
           <td className="missing">{record.start}</td>
           { 
-            (idx > 0 && idx < all.length - 1)
+            (idx > 0)
             ? <td className="right missing" >{durationFmt(record.date, record.start, all[idx-1].end)}</td>
             : <td></td> 
           }
@@ -368,23 +356,22 @@ function LogGap(props) {
   )
 }
 
-
 export function ViewTimeLogTable(props) {
   const { log } = props
   return (
     <table>
       {/* thead and tbody break the rendering for some reason... */}
-      {/* <thead> */}
-      <tr className='theader'>
-        <th>Date</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Span</th>
-        <th>Name</th>
-        <th>Categories</th>
-      </tr>
-      {/* </thead> */}
-        {/* <tbody> */}
+      <thead>
+        <tr className='theader'>
+          <th>Date</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Span</th>
+          <th>Name</th>
+          <th>Categories</th>
+        </tr>
+      </thead>
+      <tbody>
         {log.map((record, idx, all) => 
           // <Paper> -- For some reason, <tr> and <Paper> tags are not friends.
           <>
@@ -401,7 +388,7 @@ export function ViewTimeLogTable(props) {
             </tr>
           </>
         )}
-        {/* </tbody> */}
+      </tbody>
     </table>
   )
 }
