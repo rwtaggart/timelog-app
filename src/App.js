@@ -23,9 +23,14 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import EditIcon from '@mui/icons-material/Edit';
+import RepeatOnIcon from '@mui/icons-material/RepeatOn';
+import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, isDev as isDevFnc } from './utils.js'
+import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, } from './utils.js'
+// isDev as isDevFnc
 
 import { categories } from './constants.js'
 import { ViewTimeLogTable, EditTimeBlock, resetTimeRecord, NullTime, TimeZeros } from './TimeBlock.js'
@@ -33,7 +38,7 @@ import { ViewTimeLogTable, EditTimeBlock, resetTimeRecord, NullTime, TimeZeros }
 
 function App() {
   /** TODO: Move all "show" boolean settings into a single object **/
-  const [ isDev, setIsDev ] = useState(() => isDevFnc())
+  // const [ isDev, setIsDev ] = useState(() => isDevFnc())
   const [ isShowSettings, setIsShowSettings ] = useState(false)
   const [ isShowTodo, setIsShowToDo ] = useState(false)
   const [ session_id, setSessionId ] = useState("")
@@ -114,11 +119,18 @@ function App() {
           <Stack direction="row" spacing={{ xs: 4, sm: 10, md: 20 }}>
             <div>
               <span className="app-title">Time Log </span>
-              {isDev && <span>(dev)</span>}
             </div>
             <FormControl>
-            {/* <span onClick={() => setShowEditModeSw(prevFlag => !prevFlag)}>Edit Mode: </span> */}
-              <FormLabel onClick={() => setShowEditModeSw(prevFlag => !prevFlag)}>Edit Mode: {showEditModeSw || editMode}</FormLabel>
+              <Stack direction="row">
+                <FormLabel onClick={() => setShowEditModeSw(prevFlag => !prevFlag)}>View Mode:</FormLabel>
+                {showEditModeSw || 
+                  <>
+                    {editMode == "view"        && <Stack direction="row" spacing={1}><TableChartIcon /></Stack>}
+                    {editMode == "single edit" && <Stack direction="row" spacing={1}><EditIcon /></Stack>}
+                    {editMode == "bulk edit"   && <Stack direction="row" spacing={1}><RepeatOnIcon /></Stack>}
+                  </>
+                }
+              </Stack>
               { showEditModeSw &&
                 <RadioGroup row
                     value={editMode}
@@ -228,23 +240,22 @@ function App() {
                 <li><del>Set output dir from arguments</del></li>
                 <li><del>Use "today" file on start. Enable re-load file from disk.</del></li>
                 <li><del>Automatically order based on start time</del></li>
+                <li><del>Fix isDev (dev) header label</del></li>
+                <li><del>Store config in <code>~/.config/timelog</code> dir</del></li>
+                <li><del>Enable configurable categories</del></li>
+                <li><del>Set duration from start & end</del></li>
+                <li><del>Add current time when creating a new record</del></li>
               </ul>
               <ul>
-                <li>Fix isDev (dev) header label</li>
-                <li>Enable configurable categories</li>
-                <li>Store config in <code>~/.config/timelog</code> dir</li>
-                <li>Set duration from start & end</li>
+                <li>Update categories config: add colors and render grouping</li>
+                <li>Render TextField when click on a cell in the table log view</li>
+                <li>Add edit button to each time log record</li>
+                <li>Add "break" button</li>
                 <li>Maintain list of "active" records (no end time)</li>
                 <li>Add Date picker to record edit view</li>
-                <li>Add current time when creating a new record</li>
-                <li>Add duration format and blank name validation</li>
-                <li>Add "break" button</li>
-                <li>Add edit button to each time log record</li>
-                <li>Render TextField when click on a cell in the table log view</li>
+                <li>Add blank name validation</li>
                 <li>Use Cards for each row?</li>
               </ul>
-              <li><del></del></li>
-              <li></li>
             </Stack>
               {/* TEMPLATES (uncomment and duplicate): */}
               {/* <li></li> */}
