@@ -159,11 +159,6 @@ function App() {
         </ThemeProvider>
       </header>
       <main className="app-content">
-        {/* <FormControlLabel control={
-            <Switch checked={isEditMode} onChange={(e) => {setisEditMode(!isEditMode)}} />
-          }
-          label="edit mode" 
-        /> */}
         {/* TODO: Create separate Settings component */}
         {isShowSettings && 
           <Stack direction="row" spacing={2}>
@@ -205,11 +200,6 @@ function App() {
              />}
         <br />
         <br />
-        {/* <h1>DEBUG</h1>
-        <br />
-        <span>{JSON.stringify(timesLog)}</span>
-        <br />
-        <br /> */}
         { isShowTodo
           ? <Button onClick={() => {setIsShowToDo(prevFlag => !prevFlag)}}>
               Hide ToDos
