@@ -97,8 +97,9 @@ app.whenReady().then(() => {
   ipcMain.handle('appMeta:isDev', () => isDev)
   ipcMain.handle('datastore:write', appUtils.writeDataJSON)
   ipcMain.handle('datastore:load',  appUtils.loadDataJSON)
+  ipcMain.handle('config:categories:load',  appUtils.loadCfgCategories)
   createWindow()
-x
+
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.

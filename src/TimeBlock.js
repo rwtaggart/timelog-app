@@ -19,8 +19,11 @@ import Chip from '@mui/material/Chip';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 import setDT from 'date-fns/set'
-import { parseTime, parseDate, dateFmt, timeFmt } from './utils.js'
-import { categories } from './constants.js'
+import formatDuration from 'date-fns/formatDuration'
+import formatDistance from 'date-fns/formatDistance'
+
+import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, durationFmt, } from './utils.js'
+// import { categories } from './constants.js'
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -67,9 +70,10 @@ export const resetTimeRecord = (initStart, isInitEnd, tl) => {
 
 /** Categories & Topics */
 export function Categories(props) {
-  const { selected, setSelected } = props
+  const { selected, setSelected, cfgCategories } = props
   const initCategories = () => {
-    return categories.reduce((prev, cur) => { let mod = {...prev }; mod[cur]=(selected.includes(cur)) ? true : false; return mod;}, {})
+    // Create object with category keys and isChecked flags -- e.g. { 'category_name': false, ... }
+    return cfgCategories.reduce((prev, cur) => { let mod = {...prev }; mod[cur]=(selected.includes(cur)) ? true : false; return mod;}, {})
   }
   const [isChecked, setIsChecked] = useState(initCategories)
   const handleChange = (name) => (e) => {
@@ -102,7 +106,7 @@ export function Categories(props) {
     
     //Grid Method
     <Grid container spacing={1}>
-      {categories.map(name =>
+      {cfgCategories.map(name =>
         // <Checkbox key={'cat'+name+'cb'} checked={isChecked[name]} onChange={handleChange(name)} />
         <Grid item>
           <FormControlLabel
@@ -124,7 +128,7 @@ export function Topics(props) {
  * EditTimeBlock Component
  */
 export function EditTimeBlock(props) {
-  const { initTimeRecord, addTimeRecord } = props
+  const { initTimeRecord, addTimeRecord, cfgCategories } = props
   const [ time, setTime ]         = useState({...initTimeRecord})  // RENAME => timeRecord
   const [ status, setStatus ]     = useState("Not Submitted")
   const [ keyCount, setKeyCount ] = useState(0)
@@ -183,8 +187,21 @@ export function EditTimeBlock(props) {
     setTime({...time, 'categories': selected})
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (validateInputs()) {
+      console.log('(D): handleSubmit before setTime: ', `${time.duration}, ${time.start}, ${time.end}`)
+      // await setTime(prevTime => {
+      //   // FIXME: This doesn't work. Incorrectly call setState() for multiple components during the same "update" hook cycle.
+      //   const startdt = parseDateTime(prevTime.date, prevTime.start)
+      //   const enddt = parseDateTime(prevTime.date, prevTime.end)
+      //   // const durdt = enddt - startdt
+      //   const durdt = formatDistance(enddt, startdt)
+      //   console.log('(D): handleSubmit update time: ', `${prevTime.duration}, ${startdt}, ${enddt}, ${durdt}`)
+      //   const modTime = {...time, 'duration': durdt}
+      //   console.log('(D): handleSubmit after setTime: ', `${modTime.duration}, ${modTime.start}, ${modTime.end}`)
+      //   return resetTimeRecord()
+      // })
+      console.log('(D): handleSubmit after setTime: ', `${time.duration}, ${time.start}, ${time.end}`)
       addTimeRecord(time)
       setTime(resetTimeRecord())
     } else {
@@ -258,7 +275,7 @@ export function EditTimeBlock(props) {
             </IconButton>
           </Tooltip>
       </Stack>
-      <Categories selected={time.categories} setSelected={handleCategoryChange}/>
+      <Categories selected={time.categories} setSelected={handleCategoryChange} cfgCategories={cfgCategories}/>
       {isShowErrMsg && <span className="error">Time format is invalid</span>}
     </Box>
     </>
@@ -341,7 +358,7 @@ export function ViewTimeLogTable(props) {
         <th>Date</th>
         <th>Start</th>
         <th>End</th>
-        {/* <th>Duration</th> */}
+        <th>Span</th>
         <th>Name</th>
         <th>Categories</th>
       </tr>
@@ -354,9 +371,8 @@ export function ViewTimeLogTable(props) {
                 <td>{record.date}</td>
                 <td>{record.start}</td>
                 <td>{record.end}</td>
-                {/* <td>{record.duration}</td> */}
+                <td className="right">{durationFmt(record.date, record.start, record.end)}</td>
                 <td>{record.name}</td>
-                {/* <td>{record.categories.join(',')}</td> */}
                 <td>{record.categories.map(cat => <Chip label={cat} variant="outlined" />)}</td>
               </>
             </tr>

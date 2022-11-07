@@ -158,6 +158,10 @@ th {
   text-align: left;
 }
 
+td.right {
+  text-align: right;
+}
+
 /* .theader {
   /* This doesn't create a solid background across the whole table header row. *
   background-color: #a6c8ff; /* Blue-30 *
