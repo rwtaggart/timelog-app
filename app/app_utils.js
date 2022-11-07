@@ -48,7 +48,7 @@ const DEFAULT_OUT_DIR_NAME = (process.env['OUT_DIR_NAME'] != null)
 const DEFAULT_CFG_DIR_NAME = (process.env['CFG_DIR_NAME'] != null)
   ? process.env['CFG_DIR_NAME'] 
   : (process.env['DEV'] == null)
-    ? path.join(os.homedir(), '.config/')
+    ? path.join(os.homedir(), '.config/timelog/')
     : './timelog/';
 let sessionPrefix = DEFAULT_SESSION_PREFIX
 let outDirName = DEFAULT_OUT_DIR_NAME

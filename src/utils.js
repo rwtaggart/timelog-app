@@ -7,7 +7,9 @@
 
 /* TIME & DATE UTILS */
 import { format, parse } from 'date-fns'
+import addTime from 'date-fns/add'
 import intervalToDuration from 'date-fns/intervalToDuration'
+import areIntervalsOverlapping from 'date-fns/areIntervalsOverlapping'
 
 export function dateFmt(date) {
   if (date instanceof Date && !isNaN(date))
@@ -42,6 +44,23 @@ export function durationFmt(dateStr, startStr, endStr) {
     end: parseDateTime(dateStr, endStr)
   })
   return Object.keys(dur).map(k => dur[k] > 0 ? `${dur[k]}${k[0]}` : '').join(' ').trim()
+}
+
+export function fuzzyIntervalOverlap(a, b) {
+  if (a == null || b == null 
+    || a.start == null || b.start == null
+    || a.end == null || b.end == null) {
+    return false
+  }
+  let afuzzy = {
+    start: addTime(parseDateTime(a.date, a.start), {seconds: -10}),
+    end: addTime(parseDateTime(a.date,a.end), {seconds: 10}),
+  }
+  let bfuzzy = {
+    start: addTime(parseDateTime(b.date, b.start), {seconds: -10}),
+    end: addTime(parseDateTime(b.date, b.end), {seconds: 10}),
+  }
+  return areIntervalsOverlapping(afuzzy, bfuzzy)
 }
 
 /* DATA STORE UTILS */
