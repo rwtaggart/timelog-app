@@ -7,6 +7,7 @@
 
 /* TIME & DATE UTILS */
 import { format, parse } from 'date-fns'
+import intervalToDuration from 'date-fns/intervalToDuration'
 
 export function dateFmt(date) {
   if (date instanceof Date && !isNaN(date))
@@ -34,6 +35,15 @@ export function parseTime(timeStr) {
   return parse(timeStr, 'h:mmaaa', new Date())
 }
 
+export function durationFmt(dateStr, startStr, endStr) {
+  console.log("(D): durationFmt: ", dateStr, startStr, endStr)
+  const dur = intervalToDuration({
+    start: parseDateTime(dateStr, startStr), 
+    end: parseDateTime(dateStr, endStr)
+  })
+  return Object.keys(dur).map(k => dur[k] > 0 ? `${dur[k]}${k[0]}` : '').join(' ').trim()
+}
+
 /* DATA STORE UTILS */
 class ElectronError extends Error {
   constructor(message) {
@@ -57,6 +67,11 @@ export async function writeData(session_id, data) {
 export async function loadData(session_id) {
   hasAPI('dataStore')
   return await window.dataStore.load(session_id)
+}
+
+export async function loadCfgCategories() {
+  hasAPI('config')
+  return await window.config.categories.load()
 }
 
 export async function isDev(){

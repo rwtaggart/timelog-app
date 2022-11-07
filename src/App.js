@@ -25,9 +25,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, isDev as isDevFnc } from './utils.js'
+import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, isDev as isDevFnc } from './utils.js'
 
-// import { categories, topics } from './constants.js'
+import { categories } from './constants.js'
 import { ViewTimeLogTable, EditTimeBlock, resetTimeRecord, NullTime, TimeZeros } from './TimeBlock.js'
 
 
@@ -39,6 +39,7 @@ function App() {
   const [ session_id, setSessionId ] = useState("")
   const [ editMode, setEditMode ] = useState("view")
   const [ showEditModeSw, setShowEditModeSw ] = useState(false)
+  const [ cfgCategories, setCfgCategories ] = useState(categories)  // TODO: Stuff into a "config" object and useReducer() instead.
   const [ timesLog, settimesLog ] = useState([])  // QUESTION: useReducer() instead?
   const darkTheme = createTheme({
     palette: {
@@ -73,6 +74,12 @@ function App() {
     const data = await loadData(session_id)
     console.log('(D): handleReloadData: ', `${data.length}`, `${data}`)
     settimesLog(data)
+  }
+
+  const handleReloadCfgCategories = async (e) => {
+    const data = await loadCfgCategories()
+    console.log('(D): handleReloadCfgCategories: ', `${data.length}`, `${data}`)
+    setCfgCategories(data)
   }
 
   const handleKeyPress = (e) => {
@@ -145,20 +152,27 @@ function App() {
           }
           label="edit mode" 
         /> */}
+        {/* TODO: Create separate Settings component */}
         {isShowSettings && 
-          <FormControl id="settings-form">
-            <TextField
-                // error={ errors.start }
-                id="standard-basic"
-                variant="standard"
-                label="Session ID"  
-                value={session_id}
-                onChange={(e) => {setSessionId(e.target.value)}}
-                // onKeyPress={handleKeyPress}
-                // onBlur={(e) => setSessionId(e.target.value)}
-                // helperText="mm:ss (am/pm)"
-              />
-          </FormControl>
+          <Stack direction="row" spacing={2}>
+            <Button onClick={handleReloadCfgCategories}>
+              <ReplayIcon />
+              Reload Categories
+            </Button>
+            <FormControl id="settings-form">
+              <TextField
+                  // error={ errors.start }
+                  id="standard-basic"
+                  variant="standard"
+                  label="Session ID"  
+                  value={session_id}
+                  onChange={(e) => {setSessionId(e.target.value)}}
+                  // onKeyPress={handleKeyPress}
+                  // onBlur={(e) => setSessionId(e.target.value)}
+                  // helperText="mm:ss (am/pm)"
+                />
+            </FormControl>
+          </Stack>
         }
         <br />
         <ViewTimeLogTable log={timesLog} />
@@ -175,6 +189,7 @@ function App() {
                     timesLog.length > 0,
                   )
                 }
+                cfgCategories={cfgCategories}
              />}
         <br />
         <br />

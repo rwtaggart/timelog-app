@@ -38,3 +38,8 @@ contextBridge.exposeInMainWorld('dataStore', {
   write: (session_id, data) => ipcRenderer.invoke('datastore:write', session_id, data),
   load:  (session_id) => ipcRenderer.invoke('datastore:load', session_id)
 })
+contextBridge.exposeInMainWorld('config', {
+  categories: {
+    load:  () => ipcRenderer.invoke('config:categories:load')
+  }
+})
