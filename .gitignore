@@ -11,6 +11,9 @@
 # production
 /build
 
+# electron production
+/out
+
 # misc
 .DS_Store
 .env.local
@@ -24,3 +27,9 @@ yarn-error.log*
 
 # output data
 /timelog
+
+# temporary examples and experiments
+/tmp
+/*/tmp
+# /app/tmp
+# /public/tmp
