@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld('dataStore', {
 })
 contextBridge.exposeInMainWorld('config', {
   categories: {
-    load:  () => ipcRenderer.invoke('config:categories:load')
+    load:  () => ipcRenderer.invoke('config:categories:load'),
+    edit:  () => ipcRenderer.invoke('config:categories:edit')
   }
 })
