@@ -30,6 +30,7 @@ https://medium.com/folkdevelopers/the-ultimate-guide-to-electron-with-react-8df8
 
 https://www.electronjs.org/docs/latest/tutorial/
 https://electronjs.org/docs/latest/tutorial/quick-start
+https://www.electronjs.org/docs/latest/tutorial/tutorial-packaging
 
 
 # Project setup
