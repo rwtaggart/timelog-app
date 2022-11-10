@@ -26,9 +26,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "dev": "DEV=1 concurrently -k \"BROWSER=none npm start\" \"npm:electron\"",
-    "devnob": "BROWSER=none npm start",
-    "devel": "DEV=1 electron .",
+    "dev": "DEV=1 concurrently -k \"BROWSER=none npm run start-dev\" \"npm run electron\"",
+    "devb": "BROWSER=none npm run start-dev",
+    "deve": "DEV=1 electron .",
     "electron": "wait-on tcp:3000 && electron .",
     "package": "electron-forge package",
     "make": "electron-forge make"
