@@ -4,8 +4,10 @@ import './App.css';
 import isBefore from 'date-fns/isBefore'
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Switch from '@mui/material/Switch';
@@ -29,7 +31,7 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, } from './utils.js'
+import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, editCfgCategories, } from './utils.js'
 // isDev as isDevFnc
 
 import { categories } from './constants.js'
@@ -86,6 +88,11 @@ function App() {
     console.log('(D): handleReloadCfgCategories: ', `${data.length}`, `${data}`)
     setCfgCategories(data)
   }
+  const handleEditCfgCategories = async (e) => {
+    editCfgCategories()
+    // console.log('(D): handleEditCfgCategories: ', `${data.length}`, `${data}`)
+    // setCfgCategories(data)
+  }
 
   const handleKeyPress = (e) => {
     console.log('(D): Key=', e.key)
@@ -95,9 +102,11 @@ function App() {
     if (editMode != 'view') { return }
     if (e.key === 'e') {
       setEditMode("single edit")
+      e.preventDefault()
     }
     if (e.key === 'b') {
       setEditMode("bulk edit")
+      e.preventDefault()
     }
   }
 
@@ -116,6 +125,7 @@ function App() {
     <div className="App">
       <header className="app-header">
       <ThemeProvider theme={darkTheme}>
+          <CssBaseline />
           <Stack direction="row" spacing={{ xs: 4, sm: 10, md: 20 }}>
             <div>
               <span className="app-title">Time Log </span>
@@ -144,14 +154,18 @@ function App() {
             </FormControl>
             {/* <Button onClick={handleWriteData}>STORE DATA</Button> */}
             <Box>
-              <IconButton onClick={handleReloadData}>
-                <ReplayIcon />
-              </IconButton>
-              <IconButton onClick={() => setIsShowSettings(prevFlag => !prevFlag)}>
-                {/* FIX ME: Color switch not working... ? */}
-                {/* <SettingsIcon color={ isShowSettings ? "action" : "secondary" } /> */}
-                <SettingsIcon color="" />
-              </IconButton>
+              <Tooltip title="Reload Data">
+                <IconButton onClick={handleReloadData}>
+                  <ReplayIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Settings">
+                <IconButton onClick={() => setIsShowSettings(prevFlag => !prevFlag)}>
+                  {/* FIX ME: Color switch not working... ? */}
+                  {/* <SettingsIcon color={ isShowSettings ? "action" : "secondary" } /> */}
+                  <SettingsIcon color="" />
+                </IconButton>
+              </Tooltip>
             </Box>
           </Stack>
           {/* <GitHubIcon onClick={e =>  window.location.href=''} /> */}
@@ -159,12 +173,17 @@ function App() {
         </ThemeProvider>
       </header>
       <main className="app-content">
+      <ThemeProvider theme={darkTheme}>
         {/* TODO: Create separate Settings component */}
         {isShowSettings && 
           <Stack direction="row" spacing={2}>
             <Button onClick={handleReloadCfgCategories}>
               <ReplayIcon />
               Reload Categories
+            </Button>
+            <Button onClick={handleEditCfgCategories}>
+              <EditIcon />
+              Edit Categories
             </Button>
             <FormControl id="settings-form">
               <TextField
@@ -186,6 +205,7 @@ function App() {
         <br />
         { editMode != 'view' 
           && <EditTimeBlock 
+                key={timesLog.length}
                 addTimeRecord={addTimeRecord} 
                 initTimeRecord={
                   // TODO: Stuff this logic into TimeBlock.js
@@ -252,6 +272,7 @@ function App() {
               {/* <li><del></del></li> */}
         </span>
       }
+      </ThemeProvider>
       </main>
     </div>
   );

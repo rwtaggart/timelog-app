@@ -93,6 +93,11 @@ export async function loadCfgCategories() {
   return await window.config.categories.load()
 }
 
+export async function editCfgCategories() {
+  hasAPI('config')
+  return await window.config.categories.edit()
+}
+
 export async function isDev(){
   hasAPI('appMeta')
   return await window.appMeta.isDev()

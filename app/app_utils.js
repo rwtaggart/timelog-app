@@ -5,6 +5,7 @@
 const path = require('path')
 const os = require('os')
 const fs = require('fs')
+const { spawn } = require('node:child_process')
 const { format } = require('date-fns')
 
 class ValueError extends Error {
@@ -159,6 +160,21 @@ async function loadCfgCategories() {
   return JSON.parse(fs.readFileSync(fname))
 }
 
+async function editCfgCategories() {
+  checkCfgDir()
+  const fname = path.join(cfgDirName, 'categories.json')
+  // spawn('open', [fname])
+  // if (process.env['EDITOR'] != null) {
+  //   // FIXME: This may be a cli app like 'vi'
+  //   console.log('(I): Starting ', process.env['EDITOR'])
+  //   spawn(process.env['EDITOR'], ['$EDITOR'])
+  // } else {
+    // FIXME: Only works for MacOS
+    console.log('(I): Starting TextEdit')
+    spawn('open', ['-a', 'TextEdit', fname])
+  // }
+}
+
 module.exports = {
   getSessionPrefix: getSessionPrefix,
   setSessionPrefix: setSessionPrefix,
@@ -168,5 +184,6 @@ module.exports = {
   writeDataJSON: writeDataJSON,
   loadDataJSON: loadDataJSON,
   loadCfgCategories: loadCfgCategories,
+  editCfgCategories: editCfgCategories,
   checkOutDir: checkOutDir,
 }

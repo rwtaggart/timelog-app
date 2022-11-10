@@ -4,7 +4,7 @@
  *  27 Oct. 2022
  */
 
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -19,6 +19,7 @@ import Chip from '@mui/material/Chip';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 import setDT from 'date-fns/set'
+import isBefore from 'date-fns/isBefore'
 import formatDuration from 'date-fns/formatDuration'
 import formatDistance from 'date-fns/formatDistance'
 
@@ -62,7 +63,12 @@ export const resetTimeRecord = (initStart, isInitEnd, tl) => {
   let timeRecord = {...NullTime}
   timeRecord.date = dateFmt(setDT(new Date(), TimeZeros))
   timeRecord.start = initStart != null ? initStart : now
-  if (isInitEnd && now !== timeRecord.start) {
+  console.log('(D): resetTimeRecord: ', now, timeRecord.start)
+  if ( isInitEnd && now !== timeRecord.start 
+       && isBefore(
+                    parseDateTime(timeRecord.date, timeRecord.start), 
+                    parseDateTime(timeRecord.date, now)
+                   )) {
     timeRecord.end = now
   }
   return timeRecord
@@ -127,18 +133,14 @@ export function Topics(props) {
 /**
  * EditTimeBlock Component
  */
-export function EditTimeBlock(props) {
-  const { initTimeRecord, addTimeRecord, cfgCategories } = props
-  const [ time, setTime ]         = useState({...initTimeRecord})  // RENAME => timeRecord
+export function EditTimeBlock( { initTimeRecord, addTimeRecord, cfgCategories } ) {
+  const [ time, setTime ]         = useState({...initTimeRecord})  // TODO: Rename time => timeRecord
   const [ status, setStatus ]     = useState("Not Submitted")
   const [ keyCount, setKeyCount ] = useState(0)
   const [ errors, setErrors ] = useState({})
   const [ isShowErrMsg, setisShowErrMsg ] = useState(false)
 
-  console.log("(D): time: ", JSON.stringify(time))
-  
   const validateTimeInput = (label) => {
-    // TODO: rename => valiidateTimeInput()
     return (e) => {
       console.log('(D): validate value', JSON.stringify(time[label]))
       const d = parseTime(time[label].replace(/\s/g, ''))
@@ -150,7 +152,6 @@ export function EditTimeBlock(props) {
         if (Object.keys(modErrs).length == 0) {
           setisShowErrMsg(false)
         }
-        // TODO: Compute elapsed time / duration ?
       }
       setErrors(modErrs)
       return modErrs[label]
@@ -178,6 +179,9 @@ export function EditTimeBlock(props) {
     return (e) => {
       let modTime = {...time}
       modTime[label] = e.target.value
+      if (modTime[label] == 'n') {
+        modTime[label] = timeFmt(new Date())
+      }
       console.log('CHG: ', label, e.target.value, modTime)
       setTime(modTime)
     }
@@ -223,6 +227,7 @@ export function EditTimeBlock(props) {
             { dateFmt(parseDate(time.date)) }
           </span>
           <TextField
+            autoFocus
             error={ errors.start }
             id="standard-basic"
             variant="standard"
