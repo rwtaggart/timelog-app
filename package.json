@@ -13,6 +13,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "date-fns": "^2.29.3",
+    "electron-squirrel-startup": "^1.0.0",
     "minimist": "^1.2.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -20,14 +21,17 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start-dev": "react-scripts start",
+    "start": "electron-forge start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev": "DEV=1 concurrently -k \"BROWSER=none npm start\" \"npm:electron\"",
     "devnob": "BROWSER=none npm start",
     "devel": "DEV=1 electron .",
-    "electron": "wait-on tcp:3000 && electron ."
+    "electron": "wait-on tcp:3000 && electron .",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "eslintConfig": {
     "extends": [
@@ -48,6 +52,11 @@
     ]
   },
   "devDependencies": {
+    "@electron-forge/cli": "^6.0.0",
+    "@electron-forge/maker-deb": "^6.0.0",
+    "@electron-forge/maker-rpm": "^6.0.0",
+    "@electron-forge/maker-squirrel": "^6.0.0",
+    "@electron-forge/maker-zip": "^6.0.0",
     "concurrently": "^7.5.0",
     "electron": "^21.2.0",
     "wait-on": "^6.0.1"
