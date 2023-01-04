@@ -1,5 +1,7 @@
 module.exports = {
-  packagerConfig: {},
+  packagerConfig: {
+    icon: './app/baseline_work_history_blue_36dp'
+  },
   rebuildConfig: {},
   makers: [
     {

@@ -24,13 +24,48 @@ https://mui.com/
 1. Add `toolbar` and modify theme
 
 
-## Configure Electron
+# Electron
+## Electron References
 https://www.section.io/engineering-education/desktop-application-with-react/
 https://medium.com/folkdevelopers/the-ultimate-guide-to-electron-with-react-8df8d73f4c97
 
 https://www.electronjs.org/docs/latest/tutorial/
 https://electronjs.org/docs/latest/tutorial/quick-start
 https://www.electronjs.org/docs/latest/tutorial/tutorial-packaging
+
+## Initialize electron
+1. Install Electron
+  ```sh
+  npm install --save-dev electron
+  ```
+
+2. Create the following dir & files:
+  - ./app/
+    - preload.js
+    - main.js
+3. Update `package.json`
+  ```
+  "main": "./app/main.js",
+  ...
+  "scripts": [
+    ...
+    "dev": "DEV=1 concurrently -k \"BROWSER=none npm run start-dev\" \"npm run electron\"",
+    "devb": "BROWSER=none npm run start-dev",
+    "deve": "DEV=1 electron .",
+    "electron": "wait-on tcp:3000 && electron .",
+  ],
+  ```
+
+## Configure Electron Publish
+Create a binary executable for electron
+```sh
+> unset ELECTRON_IS_DEV
+> npm run build # build production react app
+> npm run make  # create distributable in ./out
+> open ./out/time-log-ui-darwin-arm64/time-log-ui.app  # test app
+> rm -r ~/lib/time-log-ui.app
+> cp -r ./out/time-log-ui-darwin-arm64/time-log-ui.app  ~/lib/time-log-ui.app
+```
 
 
 # Project setup
@@ -60,6 +95,11 @@ https://mui.com/material-ui/material-icons/
 
 ## Run
 > export ELECTRON_IS_DEV=1
+> npm run devb &
+> npm run deve
+
+Note: for some reason this doesn't work anymore, after adding electron forge packaging.
+> npm run dev
 
 ## TODO:
 
