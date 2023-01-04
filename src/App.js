@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-import isBefore from 'date-fns/isBefore'
+import isBefore from 'date-fns/isBefore';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -31,16 +31,18 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, editCfgCategories, } from './utils.js'
+import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, editCfgCategories, } from './utils.js';
 // isDev as isDevFnc
 
-import { categories } from './constants.js'
-import { ViewTimeLogTable, EditTimeBlock, resetTimeRecord, NullTime, TimeZeros } from './TimeBlock.js'
+import { categories } from './constants.js';
+import { ViewTimeLogTable, EditTimeBlock, resetTimeRecord, NullTime, TimeZeros } from './TimeBlock.js';
+import { DayRatingGroup, customRatingIcons } from './DayRating.js';
 
 
 function App() {
   /** TODO: Move all "show" boolean settings into a single object **/
   // const [ isDev, setIsDev ] = useState(() => isDevFnc())
+  const STATE_VERSION = "0.2.0"
   const [ isShowSettings, setIsShowSettings ] = useState(false)
   const [ isShowTodo, setIsShowToDo ] = useState(false)
   const [ session_id, setSessionId ] = useState("")
@@ -48,6 +50,7 @@ function App() {
   const [ showEditModeSw, setShowEditModeSw ] = useState(false)
   const [ cfgCategories, setCfgCategories ] = useState(categories)  // TODO: Stuff into a "config" object and useReducer() instead.
   const [ timesLog, settimesLog ] = useState([])  // QUESTION: useReducer() instead?
+  const [ dayRating, setDayRating ] = useState(0)
   const darkTheme = createTheme({
     palette: {
       mode: 'dark',
@@ -63,7 +66,13 @@ function App() {
           parseDateTime(b.date, b.start)
         ) ? -1 : 1
       ))
-      writeData(session_id, updateTimesLog)
+      // TODO: Store entire "state" persistently with useReducer() above...
+      const state = {
+        v: STATE_VERSION,
+        rating: dayRating,
+        timeslog: updateTimesLog
+      }
+      writeData(session_id, state)
       return updateTimesLog
     })
     if (editMode != 'bulk edit') {
@@ -80,7 +89,22 @@ function App() {
   const handleReloadData = async (e) => {
     const data = await loadData(session_id)
     console.log('(D): handleReloadData: ', `${data.length}`, `${data}`)
-    settimesLog(data)
+    // FIXME: handle multiple versions of data...
+    // TODO: Handle this in the utils.js "api" part...
+    if (data && typeof data === 'object') {
+      if (Array.isArray(data)) {
+        // OLD - deprecated. TODO: TAKE OUT.
+        settimesLog(data)
+      } else if (data && data.v === "0.2.0") {
+        // TODO: Support multiple versions ?
+        setDayRating(data.rating)
+        settimesLog(data.timeslog)
+      } else {
+        throw Error("Unable to load data - version mismatch")
+      }
+    } else {
+      throw Error("Unable to load data")
+    }
   }
 
   const handleReloadCfgCategories = async (e) => {
@@ -128,7 +152,9 @@ function App() {
           <CssBaseline />
           <Stack direction="row" spacing={{ xs: 4, sm: 10, md: 20 }}>
             <div>
-              <span className="app-title">Time Log </span>
+              <span className="app-title">Time Log</span>
+              {/* TODO: Only render "TEST MODE" in "dev" mode!!! */}
+              {/* &nbsp; &nbsp; <span style={{"color":"orange"}}>TEST MODE</span> */}
             </div>
             <FormControl>
               <Stack direction="row">
@@ -168,6 +194,7 @@ function App() {
               </Tooltip>
             </Box>
           </Stack>
+          <DayRatingGroup rating={dayRating} setRating={setDayRating} />
           {/* <GitHubIcon onClick={e =>  window.location.href=''} /> */}
           {/* <span fixme="hack: why do we need this ??"/> */}
         </ThemeProvider>
@@ -201,7 +228,7 @@ function App() {
           </Stack>
         }
         <br />
-        <ViewTimeLogTable log={timesLog} />
+          <ViewTimeLogTable log={timesLog} />
         <br />
         { editMode != 'view' 
           && <EditTimeBlock 
