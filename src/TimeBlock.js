@@ -23,7 +23,7 @@ import isBefore from 'date-fns/isBefore'
 import formatDuration from 'date-fns/formatDuration'
 import formatDistance from 'date-fns/formatDistance'
 
-import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, durationFmt, fuzzyIntervalOverlap} from './utils.js'
+import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, durationFmt, fuzzyIntervalOverlap } from './utils.js'
 // import { categories } from './constants.js'
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -130,16 +130,57 @@ export function Topics(props) {
 
 }
 
+// TODO: Make this work correctly
+// function ViewEditDate({time, handleTextChange}) {
+//   // TODO: Use DatePicker instead of basic input
+//   return (
+//     <span>
+//       TEST &nbsp;
+//       { dateFmt(parseDate(time.date)) }
+//       <TextField
+//             error={ errors.end }
+//             id="standard-basic"
+//             variant="standard"
+//             label="end"
+//             value={time.end}
+//             onChange={handleTextChange("end")}
+//             onKeyPress={handleKeyPress}
+//             onBlur={validateTimeInput("end")}
+//             helperText="mm:ss (am/pm)"
+//           />
+//     </span>
+//   )
+// }
+
 /**
  * EditTimeBlock Component
  */
 export function EditTimeBlock( { initTimeRecord, addTimeRecord, cfgCategories } ) {
+  // TODO: 
   const [ time, setTime ]         = useState({...initTimeRecord})  // TODO: Rename time => timeRecord
   const [ status, setStatus ]     = useState("Not Submitted")
   const [ keyCount, setKeyCount ] = useState(0)
   const [ errors, setErrors ] = useState({})
   const [ isShowErrMsg, setisShowErrMsg ] = useState(false)
 
+  const validateDateInput = (label) => {
+    return (e) => {
+      console.log('(D): validate value', label, JSON.stringify(time[label]))
+      const d = parseDate(time[label])
+      console.log('(D): parseDate=', d)
+      let modErrs = {...errors}
+      if (isNaN(d)) { 
+        modErrs[label] = true 
+      } else { 
+        delete modErrs[label]
+        if (Object.keys(modErrs).length == 0) {
+          setisShowErrMsg(false)
+        }
+      }
+      setErrors(modErrs)
+      return modErrs[label]
+    }
+  }
   const validateTimeInput = (label) => {
     return (e) => {
       console.log('(D): validate value', JSON.stringify(time[label]))
@@ -180,6 +221,7 @@ export function EditTimeBlock( { initTimeRecord, addTimeRecord, cfgCategories } 
       let modTime = {...time}
       modTime[label] = e.target.value
       if (modTime[label] == 'n') {
+        // FIXME: Should only apply to "date" fields
         modTime[label] = timeFmt(new Date())
       }
       console.log('CHG: ', label, e.target.value, modTime)
@@ -223,9 +265,21 @@ export function EditTimeBlock( { initTimeRecord, addTimeRecord, cfgCategories } 
     <>
     <Box>
       <Stack direction="row" spacing={1}>
-          <span>
-            { dateFmt(parseDate(time.date)) }
-          </span>
+          {/* TODO: Use DatePicker ? */}
+          {/* OLD: <span> { dateFmt(parseDate(time.date)) } </span> */}
+          {/* <ViewEditDate time={time}/> */}
+          <TextField
+            autoFocus
+            error={ errors.date }
+            id="standard-basic"
+            variant="standard"
+            label="date"  
+            value={time.date}
+            onChange={handleTextChange("date")}
+            onKeyPress={handleKeyPress}
+            onBlur={validateDateInput("date")}
+            helperText="EEE, MMM. dd"
+          />
           <TextField
             autoFocus
             error={ errors.start }

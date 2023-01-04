@@ -102,3 +102,10 @@ export async function isDev(){
   hasAPI('appMeta')
   return await window.appMeta.isDev()
 }
+
+export function parseVersion(v) {
+  /** Use Semantic Versioning */
+  const labels = ['major', 'minor', 'patch']
+  const semver = v.split('.').map(i => parseInt(i))
+  return labels.reduce((o, l, idx) => {o[l]=semver[idx]; return o}, {})
+}
