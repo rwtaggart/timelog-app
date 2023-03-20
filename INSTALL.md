@@ -57,6 +57,19 @@ https://www.electronjs.org/docs/latest/tutorial/tutorial-packaging
   ```
 
 ## Configure Electron Publish
+https://www.electronjs.org/docs/latest/tutorial/tutorial-packaging
+
+```
+npm install --save-dev @electron-forge/cli
+npx electron-forge import
+```
+Add icon to `forge.config.js`
+```
+  packagerConfig: {
+    icon: './app/baseline_work_history_blue_36dp'
+  },
+```
+
 Create a binary executable for electron
 ```sh
 > unset ELECTRON_IS_DEV
@@ -120,3 +133,23 @@ function parseBool(s) {
     default: return false;
   }
 }
+
+## Icons
+Use ICNS file for MacOS.
+https://fonts.google.com/icons
+
+https://discussions.apple.com/thread/8064576?answerId=32235060022#32235060022
+
+1. Download from Material Icons
+2. Save as SVG
+  1. Modify SVG and make image at least 512x512
+  2. Add <rect> to make background
+  3. Translate and expand viewport to add white-space padding
+3. Copy into Keynote and apply instant alpha
+4. Open in Preview
+  1. Tools -> Adjust size
+  2. Set size: 512 x 512
+  3. Change resolution to at least 300 dpi (px / in)
+5. File -> Alt-click "Save As"
+6. Alt-click file types -> .icns 
+   (must be at least 512x512 to store as ICNS format)
