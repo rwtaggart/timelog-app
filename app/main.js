@@ -2,6 +2,7 @@
 const {app, BrowserWindow, ipcMain} = require('electron')
 const path = require('path')
 const fs = require('fs')
+// const { mkdir } = require('node:fs/promises')
 const parseArgs = require('minimist')
 
 const appUtils = require('./app_utils.js')
@@ -41,6 +42,16 @@ if (args.help) {
 if (args.dir != null && args.dir !== "") {
   appUtils.setOutDirName(args.dir)
 }
+//  else {
+//   const homedir = app.getPath('home')
+//   const outdirName = path.join(homedir, '.timelogs')
+//   fs.mkdir(outdirName, (err) => {
+//     if (err.code != 'EEXIST') {
+//       throw Error(err);
+//     }
+//   })
+//   appUtils.setOutDirName(outdirName)
+// }
 if (args.prefix != null && args.prefix !== "") {
   appUtils.setSessionPrefix(args.prefix)
 }
@@ -52,6 +63,19 @@ appUtils.checkOutDir().catch((err) => {
   console.error('(E) [main]: ', err.message)
   process.exit(err.code)
 })
+
+function ensureExists(path, mask, cb) {
+  if (typeof mask == 'function') { // Allow the `mask` parameter to be optional
+      cb = mask;
+      mask = 0o744;
+  }
+  fs.mkdir(path, mask, function(err) {
+      if (err) {
+          if (err.code == 'EEXIST') cb(null); // Ignore the error if the folder already exists
+          else cb(err); // Something else went wrong
+      } else cb(null); // Successfully created folder
+  });
+}
 
 function createWindow () {
   // Create the browser window.
@@ -93,7 +117,7 @@ function createWindow () {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  console.log('(D): whenRead(): ', appUtils, appUtils.writeDataJSON)
+  console.log('(D): whenReady(): ', appUtils, appUtils.writeDataJSON)
   ipcMain.handle('appMeta:isDev', () => isDev)
   ipcMain.handle('datastore:write', appUtils.writeDataJSON)
   ipcMain.handle('datastore:load',  appUtils.loadDataJSON)

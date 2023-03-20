@@ -1,6 +1,7 @@
 /**
  *  Electron App Utils
  *  For writing data out with date/time stamps, etc.
+ *  TODO: rename to "main_utils.js"
  */
 const path = require('path')
 const os = require('os')
@@ -44,7 +45,7 @@ const DEFAULT_OUT_DIR_NAME = (process.env['OUT_DIR_NAME'] != null)
   ? process.env['OUT_DIR_NAME'] 
   // : './timelog/logs'
   : (process.env['DEV'] == null)
-    ? path.join(os.homedir(), '.config/timelog/logs')
+    ? path.join(os.homedir(), '.timelogs/logs')
     : './timelog/logs';
 const DEFAULT_CFG_DIR_NAME = (process.env['CFG_DIR_NAME'] != null)
   ? process.env['CFG_DIR_NAME'] 
