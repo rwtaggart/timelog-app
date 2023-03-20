@@ -90,7 +90,9 @@ export async function loadData(session_id) {
 
 export async function loadCfgCategories() {
   hasAPI('config')
-  return await window.config.categories.load()
+  let cfgs = await window.config.categories.load()
+  console.log("loadCfgCategories: " + JSON.stringify(cfgs))  // TODO: TAKE OUT?
+  return cfgs
 }
 
 export async function editCfgCategories() {
