@@ -31,7 +31,7 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, editCfgCategories, } from './utils.js';
+import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, editCfgCategories, initCategories} from './utils.js';
 // isDev as isDevFnc
 
 import { categories } from './constants.js';
@@ -48,7 +48,8 @@ function App() {
   const [ session_id, setSessionId ] = useState("")
   const [ editMode, setEditMode ] = useState("view")
   const [ showEditModeSw, setShowEditModeSw ] = useState(false)
-  const [ cfgCategories, setCfgCategories ] = useState(categories)  // TODO: Stuff into a "config" object and useReducer() instead.
+  // const [ cfgCategories, setCfgCategories ] = useState(categories)  // TODO: Stuff into a "config" object and useReducer() instead.
+  const [ cfgCategories, setCfgCategories ] = useState()  // TODO: Stuff into a "config" object and useReducer() instead.
   const [ timesLog, settimesLog ] = useState([])  // QUESTION: useReducer() instead?
   const [ dayRating, setDayRating ] = useState(0)
   const darkTheme = createTheme({
@@ -56,6 +57,16 @@ function App() {
       mode: 'dark',
     },
   });
+
+  useEffect(() => {
+    // Load the config categories once on initial render (with no dependencies)
+    async function loadAndSetCfgCategories () { 
+      setCfgCategories(await loadCfgCategories())
+    }
+    loadAndSetCfgCategories()
+    return
+  }, [])
+  console.log('(D): cfgCategories: ' + JSON.stringify(cfgCategories))  // Note: this may not properly reflect the "actual" state
 
   const addTimeRecord = (timeRecord) => {
     settimesLog(prevTimesLog => {
