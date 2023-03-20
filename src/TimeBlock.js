@@ -114,9 +114,9 @@ export function Categories(props) {
     <Grid container spacing={1}>
       {cfgCategories.map(name =>
         // <Checkbox key={'cat'+name+'cb'} checked={isChecked[name]} onChange={handleChange(name)} />
-        <Grid item>
+        <Grid item key={'cat'+name+'grid'}>
           <FormControlLabel
-            key={'cat'+name+'fc'}
+            key={'cat'+name+'fcl'}
             label={name} 
             control={ <Checkbox key={'cat'+name+'cb'} checked={isChecked[name]} onChange={handleChange(name)} /> } 
           />
