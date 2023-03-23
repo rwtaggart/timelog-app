@@ -31,7 +31,7 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, editCfgCategories, initCategories} from './utils.js';
+import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, editCfgCategories, initCategories, isDev as isDevFnc} from './utils.js';
 // isDev as isDevFnc
 
 import { categories } from './constants.js';
@@ -41,7 +41,7 @@ import { DayRatingGroup, customRatingIcons } from './DayRating.js';
 
 function App() {
   /** TODO: Move all "show" boolean settings into a single object **/
-  // const [ isDev, setIsDev ] = useState(() => isDevFnc())
+  const [ isDev, setIsDev ] = useState(false)
   const STATE_VERSION = "0.2.0"
   const [ isShowSettings, setIsShowSettings ] = useState(false)
   const [ isShowTodo, setIsShowToDo ] = useState(false)
@@ -49,7 +49,7 @@ function App() {
   const [ editMode, setEditMode ] = useState("view")
   const [ showEditModeSw, setShowEditModeSw ] = useState(false)
   // const [ cfgCategories, setCfgCategories ] = useState(categories)  // TODO: Stuff into a "config" object and useReducer() instead.
-  const [ cfgCategories, setCfgCategories ] = useState()  // TODO: Stuff into a "config" object and useReducer() instead.
+  const [ cfgCategories, setCfgCategories ] = useState([])  // TODO: Stuff into a "config" object and useReducer() instead.
   const [ timesLog, settimesLog ] = useState([])  // QUESTION: useReducer() instead?
   const [ dayRating, setDayRating ] = useState(0)
   const darkTheme = createTheme({
@@ -63,10 +63,12 @@ function App() {
     // TODO: Add other initializations
     //    Load isDev flag
     //    Load data
-    async function loadAndSetCfgCategories () { 
-      setCfgCategories(await loadCfgCategories())
+    async function loadAndSetInitialStates () { 
+      loadCfgCategories().then(v => setCfgCategories(v))
+      isDevFnc().then(v => setIsDev(v))
+      handleReloadData()
     }
-    loadAndSetCfgCategories()
+    loadAndSetInitialStates()
     return
   }, [])
   console.log('(D): cfgCategories: ' + JSON.stringify(cfgCategories))  // Note: this may not properly reflect the "actual" state
@@ -169,7 +171,11 @@ function App() {
             <div>
               <span className="app-title">Time Log</span>
               {/* TODO: Only render "TEST MODE" in "dev" mode!!! */}
-              {/* &nbsp; &nbsp; <span style={{"color":"orange"}}>TEST MODE</span> */}
+              {isDev && 
+                <>
+                  &nbsp; &nbsp; <span style={{"color":"orange"}}>DEV MODE</span>
+                </>
+              }
             </div>
             <FormControl>
               <Stack direction="row">
