@@ -49,7 +49,7 @@ function App() {
   const [ editMode, setEditMode ] = useState("view")
   const [ showEditModeSw, setShowEditModeSw ] = useState(false)
   // const [ cfgCategories, setCfgCategories ] = useState(categories)  // TODO: Stuff into a "config" object and useReducer() instead.
-  const [ cfgCategories, setCfgCategories ] = useState([])  // TODO: Stuff into a "config" object and useReducer() instead.
+  const [ cfgCategories, setCfgCategories ] = useState(categories)  // TODO: Stuff into a "config" object and useReducer() instead.
   const [ timesLog, settimesLog ] = useState([])  // QUESTION: useReducer() instead?
   const [ dayRating, setDayRating ] = useState(0)
   const darkTheme = createTheme({
@@ -64,7 +64,7 @@ function App() {
     //    Load isDev flag
     //    Load data
     async function loadAndSetInitialStates () { 
-      loadCfgCategories().then(v => setCfgCategories(v))
+      loadCfgCategories().then(v => { if (v != null) { setCfgCategories(v)} })
       isDevFnc().then(v => setIsDev(v))
       handleReloadData()
     }

@@ -385,7 +385,7 @@ export function ViewTimeLogGrid(props) {
               <span>{record.name}</span>
             </Grid>
             <Grid item>
-              <span>{record.categories.join(',')}</span>
+              <span>{[...record.categories, record.description].join(',')}</span>
             </Grid>
           </>
         </Grid>
@@ -442,7 +442,7 @@ export function ViewTimeLogTable(props) {
                 <td>{record.end}</td>
                 <td className="right">{durationFmt(record.date, record.start, record.end)}</td>
                 <td>{record.name}</td>
-                <td>{record.categories.map(cat => <Chip label={cat} variant="outlined" />)}</td>
+                <td>{[...record.categories, record.description].map(cat => (cat && cat != null && cat != "") && <Chip label={cat} variant="outlined" />)}</td>
               </>
             </tr>
           </>
