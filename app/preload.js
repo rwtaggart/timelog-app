@@ -6,9 +6,12 @@
  * https://www.electronjs.org/docs/latest/tutorial/sandbox
  * See also: 2-way communication
  *   https://www.electronjs.org/docs/latest/tutorial/ipc#pattern-2-renderer-to-main-two-way
+ * 
+ * TODO: Rename all methods with "." rather than ":"
  */
 
- window.addEventListener('DOMContentLoaded', () => {
+// TODO: TAKE OUT THIS EXAMPLE
+window.addEventListener('DOMContentLoaded', () => {
   const replaceText = (selector, text) => {
     const element = document.getElementById(selector)
     if (element) element.innerText = text

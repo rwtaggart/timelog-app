@@ -60,6 +60,9 @@ function App() {
 
   useEffect(() => {
     // Load the config categories once on initial render (with no dependencies)
+    // TODO: Add other initializations
+    //    Load isDev flag
+    //    Load data
     async function loadAndSetCfgCategories () { 
       setCfgCategories(await loadCfgCategories())
     }
@@ -91,6 +94,7 @@ function App() {
     }
   }
 
+  // TODO: Add Save button and key binding
   const handleWriteData = async (e) => {
     console.log('(D): handleWriteData: ', JSON.stringify(timesLog))
     let rc = await writeData(session_id, timesLog)
