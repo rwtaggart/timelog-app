@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, ipcMain} = require('electron')
+const {app, BrowserWindow, Notification, ipcMain} = require('electron')
 const path = require('path')
 const fs = require('fs')
 // const { mkdir } = require('node:fs/promises')
@@ -39,6 +39,7 @@ if (args.help) {
   console.log(HELP_MSG)
   process.exit(0)
 }
+// FIXME: Need proper checking for files that don't exist yet!!!
 if (args.dir != null && args.dir !== "") {
   appUtils.setOutDirName(args.dir)
 }
@@ -59,10 +60,6 @@ console.log(`(I): Using output dir: "${appUtils.getOutDirName()}"`)
 
 /** MAIN **/
 const isDev = parseBool(process.env['DEV'])
-appUtils.checkOutDir().catch((err) => {
-  console.error('(E) [main]: ', err.message)
-  process.exit(err.code)
-})
 
 function ensureExists(path, mask, cb) {
   if (typeof mask == 'function') { // Allow the `mask` parameter to be optional
@@ -113,10 +110,44 @@ function createWindow () {
   // mainWindow.webContents.openDevTools()
 }
 
+function createErrorWindow(err) {
+  const errWindow = new BrowserWindow({
+    width: 300,
+    height: 150,
+    title: "Initialization Error",
+    resizable: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'err_preload.js')
+    }
+  })
+  // TODO: Create a new window to display an error message.
+  errWindow.loadFile('app/error-msg.html')
+  errWindow.webContents.send('send-err', [err.name, err.message])
+  // errWindow.webContents.openDevTools()
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady()
+.then(() => {
+  // TODO: Add other "initialization" checkers here.
+  // Check: Config Dir, Output Dir, 
+  // Optional Checks: categories.json file - don't display a warning if missing.
+  return new Promise((resolve, reject) => {
+    appUtils.checkOutDir()
+    .then(resolve)
+    .catch((err) => {
+      console.error('(E) [main]: ', err.message)
+      // TODO: Use createErrorWindow() instead of new Notification()
+      // new Notification({title: err.name, body: err.message}).show()
+      createErrorWindow(err)
+      return reject(err)
+      // process.exit(err.code) -- We may not want to exit without warning.
+    })
+  })
+})
+.then(() => {
   console.log('(D): whenReady(): ', appUtils, appUtils.writeDataJSON)
   ipcMain.handle('appMeta:isDev', () => isDev)
   ipcMain.handle('datastore:write', appUtils.writeDataJSON)

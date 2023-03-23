@@ -1,6 +1,6 @@
 {
-  "name": "time-log-ui",
-  "version": "0.1.0",
+  "name": "Time Log",
+  "version": "1.0.0",
   "private": true,
   "main": "app/main.js",
   "homepage": ".",

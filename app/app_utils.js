@@ -45,7 +45,7 @@ const DEFAULT_OUT_DIR_NAME = (process.env['OUT_DIR_NAME'] != null)
   ? process.env['OUT_DIR_NAME'] 
   // : './timelog/logs'
   : (process.env['DEV'] == null)
-    ? path.join(os.homedir(), '.timelogs/logs')
+    ? path.join(os.homedir(), '.timelog/logs')
     : './timelog/logs';
 const DEFAULT_CFG_DIR_NAME = (process.env['CFG_DIR_NAME'] != null)
   ? process.env['CFG_DIR_NAME'] 
@@ -187,4 +187,5 @@ module.exports = {
   loadCfgCategories: loadCfgCategories,
   editCfgCategories: editCfgCategories,
   checkOutDir: checkOutDir,
+  OutputDirectoryMissingError: OutputDirectoryMissingError,
 }
