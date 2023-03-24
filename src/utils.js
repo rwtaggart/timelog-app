@@ -39,11 +39,16 @@ export function parseTime(timeStr) {
 
 export function durationFmt(dateStr, startStr, endStr) {
   console.log("(D): durationFmt: ", dateStr, startStr, endStr)
-  const dur = intervalToDuration({
-    start: parseDateTime(dateStr, startStr), 
-    end: parseDateTime(dateStr, endStr)
-  })
-  return Object.keys(dur).map(k => dur[k] > 0 ? `${dur[k]}${k[0]}` : '').join(' ').trim()
+  try {
+    const dur = intervalToDuration({
+      start: parseDateTime(dateStr, startStr), 
+      end: parseDateTime(dateStr, endStr)
+    })
+    return Object.keys(dur).map(k => dur[k] > 0 ? `${dur[k]}${k[0]}` : '').join(' ').trim()
+  } catch (e) {
+    console.warn('(W): Parsed invalid time format: ', e)
+    return null;
+  }
 }
 
 export function fuzzyIntervalOverlap(a, b) {
@@ -52,15 +57,20 @@ export function fuzzyIntervalOverlap(a, b) {
     || a.end == null || b.end == null) {
     return false
   }
-  let afuzzy = {
-    start: addTime(parseDateTime(a.date, a.start), {seconds: -10}),
-    end: addTime(parseDateTime(a.date,a.end), {seconds: 10}),
+  try {
+    let afuzzy = {
+      start: addTime(parseDateTime(a.date, a.start), {seconds: -10}),
+      end: addTime(parseDateTime(a.date,a.end), {seconds: 10}),
+    }
+    let bfuzzy = {
+      start: addTime(parseDateTime(b.date, b.start), {seconds: -10}),
+      end: addTime(parseDateTime(b.date, b.end), {seconds: 10}),
+    }
+    return areIntervalsOverlapping(afuzzy, bfuzzy)
+  } catch (e) {
+    console.warn('(W): Invalid Intervals: ', a, b)
+    return false
   }
-  let bfuzzy = {
-    start: addTime(parseDateTime(b.date, b.start), {seconds: -10}),
-    end: addTime(parseDateTime(b.date, b.end), {seconds: 10}),
-  }
-  return areIntervalsOverlapping(afuzzy, bfuzzy)
 }
 
 /* DATA STORE UTILS */
