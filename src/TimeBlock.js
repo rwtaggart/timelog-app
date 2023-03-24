@@ -58,10 +58,11 @@ export const NullTime = {
   topic: [],
 }
 
-export const resetTimeRecord = (initStart, isInitEnd, tl) => {
+export const resetTimeRecord = (initDate, initStart, isInitEnd, tl) => {
+  // FIXME: what is the "tl" arg??
   const now = timeFmt(new Date())
   let timeRecord = {...NullTime}
-  timeRecord.date = dateFmt(setDT(new Date(), TimeZeros))
+  timeRecord.date = initDate != null ? initDate : dateFmt(setDT(new Date(), TimeZeros))
   timeRecord.start = initStart != null ? initStart : now
   console.log('(D): resetTimeRecord: ', now, timeRecord.start)
   if ( isInitEnd && now !== timeRecord.start 
@@ -416,6 +417,7 @@ function LogGap(props) {
 }
 
 export function ViewTimeLogTable(props) {
+  /** Render data by generating HTML Table tags */
   const { log } = props
   return (
     <table>

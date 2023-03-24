@@ -68,6 +68,7 @@ export function fuzzyIntervalOverlap(a, b) {
     }
     return areIntervalsOverlapping(afuzzy, bfuzzy)
   } catch (e) {
+    // Assume no overlap if there's an error
     console.warn('(W): Invalid Intervals: ', a, b)
     return false
   }

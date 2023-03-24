@@ -259,6 +259,9 @@ function App() {
                   // TODO: Stuff this logic into TimeBlock.js
                   resetTimeRecord(
                     timesLog.length > 0
+                      ? timesLog[timesLog.length -1].date
+                      : null,
+                    timesLog.length > 0
                       ? timesLog[timesLog.length -1].end
                       : null,
                     timesLog.length > 0,
