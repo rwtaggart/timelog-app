@@ -55,6 +55,7 @@ const DEFAULT_CFG_DIR_NAME = (process.env['CFG_DIR_NAME'] != null)
 let sessionPrefix = DEFAULT_SESSION_PREFIX
 let outDirName = DEFAULT_OUT_DIR_NAME
 let cfgDirName = DEFAULT_CFG_DIR_NAME
+let activeSessionDate = new Date()
 
 function setOutDirName(dirname) {
   console.log("(D): setOutDirName(): ", dirname)
@@ -85,13 +86,14 @@ function dateFileFmt(date) {
     return "Invalid Date"
 }
 
-function fileName(session_id) {
-  return `${sessionPrefix}_${dateFileFmt(new Date())}_${session_id}.tlog`
+function fileName(date, session_id) {
+  let session_str = (session_id == null || session_id == "") ? "" : `_${session_id}`
+  return `${sessionPrefix}_${dateFileFmt(date)}${session_str}.tlog`
   // return `${sessionPrefix}_${dateFileFmt(new Date())}.tlog`
 }
 
 function absFileName(session_id) {
-  return path.join(outDirName, fileName(session_id))
+  return path.join(outDirName, fileName(activeSessionDate, session_id))
 }
 
 async function checkOutDir() {
@@ -136,7 +138,7 @@ async function writeDataCSV(e, session_id, data) {
 async function writeDataJSON(e, session_id, data) {
   checkOutDir()
   const fname = absFileName(session_id)
-  console.log('(D): writeData', session_id, data)
+  console.log('(D): writeData', fname, session_id, data)
   // if ( !Array.isArray(data) ) {
   //     throw new ValueError('Data must be an array', data)
   // }
@@ -147,7 +149,7 @@ async function writeDataJSON(e, session_id, data) {
 async function loadDataJSON(e, session_id) {
   checkOutDir()
   const fname = absFileName(session_id)
-  console.log('(D): loadData', session_id)
+  console.log('(D): loadData', fname, session_id)
   // if ( !Array.isArray(data) ) {
   //     throw new ValueError('Data must be an array', data)
   // }
@@ -181,6 +183,8 @@ module.exports = {
   setSessionPrefix: setSessionPrefix,
   getOutDirName: getOutDirName,
   setOutDirName: setOutDirName,
+  // getActiveSessionFileName: getActiveSessionFileName,
+  // setActiveSessionFileName: setActiveSessionFileName,
   writeDataCSV: writeDataCSV,
   writeDataJSON: writeDataJSON,
   loadDataJSON: loadDataJSON,
