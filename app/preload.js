@@ -34,17 +34,17 @@ contextBridge.exposeInMainWorld('mainAPI', {
 })
 
 contextBridge.exposeInMainWorld('appMeta', {
-  isDev: () => ipcRenderer.invoke('appMeta:isDev')
+  isDev: () => ipcRenderer.invoke('appMeta.isDev')
 })
 
 contextBridge.exposeInMainWorld('dataStore', {
-  write: (session_id, data) => ipcRenderer.invoke('datastore:write', session_id, data),
-  load:  (session_id) => ipcRenderer.invoke('datastore:load', session_id)
+  write: (session_id, data) => ipcRenderer.invoke('datastore.write', session_id, data),
+  load:  (session_id) => ipcRenderer.invoke('datastore.load', session_id)
 })
 contextBridge.exposeInMainWorld('config', {
   categories: {
-    load:  () => ipcRenderer.invoke('config:categories:load'),
-    edit:  () => ipcRenderer.invoke('config:categories:edit'),
+    load:  () => ipcRenderer.invoke('config.categories.load'),
+    edit:  () => ipcRenderer.invoke('config.categories.edit'),
     // init:  (cb) => ipcRenderer.on('init:config:categories:load', cb),
     // init:  (cb) => ipcRenderer.on('init:config:categories:load', cb),
   }

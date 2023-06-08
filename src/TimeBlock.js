@@ -269,6 +269,11 @@ export function EditTimeBlock( { initTimeRecord, addTimeRecord, cfgCategories } 
           {/* TODO: Use DatePicker ? */}
           {/* OLD: <span> { dateFmt(parseDate(time.date)) } </span> */}
           {/* <ViewEditDate time={time}/> */}
+          {
+            // TODO: select all text "onFocus"
+            // FIXME: onFocus doesn't work :(
+            // onFocus={() => { let s = window.getSelection(); console.log('(D): sel=' + s, s.anchorNode, s.focusNode); /* s.extend(s.anchorNode);*/ })
+          }
           <TextField
             autoFocus
             error={ errors.date }
