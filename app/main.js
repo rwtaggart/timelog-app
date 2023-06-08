@@ -149,11 +149,11 @@ app.whenReady()
 })
 .then(() => {
   console.log('(D): whenReady(): ', appUtils, appUtils.writeDataJSON)
-  ipcMain.handle('appMeta:isDev', () => isDev)
-  ipcMain.handle('datastore:write', appUtils.writeDataJSON)
-  ipcMain.handle('datastore:load',  appUtils.loadDataJSON)
-  ipcMain.handle('config:categories:load',  appUtils.loadCfgCategories)
-  ipcMain.handle('config:categories:edit',  appUtils.editCfgCategories)
+  ipcMain.handle('appMeta.isDev', () => isDev)
+  ipcMain.handle('datastore.write', appUtils.writeDataJSON)
+  ipcMain.handle('datastore.load',  appUtils.loadDataJSON)
+  ipcMain.handle('config.categories.load',  appUtils.loadCfgCategories)
+  ipcMain.handle('config.categories.edit',  appUtils.editCfgCategories)
   createWindow()
 
   app.on('activate', function () {
