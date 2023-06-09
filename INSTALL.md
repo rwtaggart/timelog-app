@@ -94,10 +94,19 @@ https://reactjs.org/docs/conditional-rendering.html
     https://reactjs.org/docs/uncontrolled-components.html#:~:text=In%20a%20controlled%20component%2C%20form,form%20values%20from%20the%20DOM.
 
 - useEffect hook:
+    If you are trying to synchronize with an external system, then you may need an effect.
     https://reactjs.org/docs/hooks-effect.html
+    https://react.dev/reference/react/useEffect#useeffect
 
 - https://create-react-app.dev/docs/deployment#building-for-relative-paths
   "homepage": ".",
+
+- useReducer:
+  https://react.dev/learn/extracting-state-logic-into-a-reducer
+
+- React State & Updating Objects:
+  https://react.dev/learn/updating-objects-in-state
+  https://react.dev/learn/choosing-the-state-structure
 
 
 
