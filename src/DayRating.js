@@ -45,8 +45,8 @@ IconContainer.propTypes = {
   value: PropTypes.number.isRequired,
 };
 
-export function DayRatingGroup(props) {
-  const { rating, setRating } = props
+export function DayRatingGroup({ rating, setRating, handleDayRatingEvent }) {
+  // const { rating, setRating } = props
   return (
     <StyledRating
       name="highlight-selected-only"
@@ -54,7 +54,7 @@ export function DayRatingGroup(props) {
       max={3}
       size="large"
       value={rating}
-      onChange={ (e) => setRating(e.target.value) }
+      onChange={ (e) => handleDayRatingEvent(e.target.value) }  // TODO: setRating({type: "ModDayRating", value: e.target.value}); rename setRating => dispatchTimeLog ?
       IconContainerComponent={IconContainer}
       getLabelText={(_value) => customRatingIcons[_value].label}
       highlightSelectedOnly

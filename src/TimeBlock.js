@@ -48,6 +48,7 @@ const durationLabels = [ 'duration' ]
 export const DateZeros = { year: 0, month:0, date:0 }
 export const TimeZeros = { hours: 0, minutes:0, seconds:0, milliseconds:1 }
 export const NullTime = {
+  id: 0,
   date: "",
   start: "",
   end: "",
@@ -156,13 +157,15 @@ export function Topics(props) {
 /**
  * EditTimeBlock Component
  */
-export function EditTimeBlock( { initTimeRecord, addTimeRecord, cfgCategories } ) {
-  // TODO: 
+export function EditTimeBlock( { initTimeRecord, timeLog, handleTimeRecordEvent, cfgCategories } ) {
+  // TODO: do we need the timeLog here? => yes, to replace initTimeRecord.
+  // TODO: rename 'addTimeRecord()' => 'handleTimeRecordEvent()'
+  // TODO: replace initTimeRecord with actual "init" logic. See App.js comment for EditTimeBlock
   const [ time, setTime ]         = useState({...initTimeRecord})  // TODO: Rename time => timeRecord
   const [ status, setStatus ]     = useState("Not Submitted")
   const [ keyCount, setKeyCount ] = useState(0)
-  const [ errors, setErrors ] = useState({})
-  const [ isShowErrMsg, setisShowErrMsg ] = useState(false)
+  const [ errors, setErrors ] = useState({})                       // TODO: Combine errors and isShowErrorMsg ? -> YES.
+  const [ isShowErrMsg, setisShowErrMsg ] = useState(false)        // TODO: use 'const isShowErrorMsg = Object.keys(errors).length > 0' instead.
 
   const validateDateInput = (label) => {
     return (e) => {
@@ -172,7 +175,7 @@ export function EditTimeBlock( { initTimeRecord, addTimeRecord, cfgCategories } 
       let modErrs = {...errors}
       if (isNaN(d)) { 
         modErrs[label] = true 
-      } else { 
+      } else {
         delete modErrs[label]
         if (Object.keys(modErrs).length == 0) {
           setisShowErrMsg(false)
@@ -235,6 +238,7 @@ export function EditTimeBlock( { initTimeRecord, addTimeRecord, cfgCategories } 
   }
 
   const handleSubmit = async (e) => {
+    // TODO: Rename 'handleSubmit()' => 'handleAddTimeRecord()'
     if (validateInputs()) {
       console.log('(D): handleSubmit before setTime: ', `${time.duration}, ${time.start}, ${time.end}`)
       // await setTime(prevTime => {
@@ -249,7 +253,11 @@ export function EditTimeBlock( { initTimeRecord, addTimeRecord, cfgCategories } 
       //   return resetTimeRecord()
       // })
       console.log('(D): handleSubmit after setTime: ', `${time.duration}, ${time.start}, ${time.end}`)
-      addTimeRecord(time)
+      // addTimeRecord(time)  // FIXME: REPLACE WITH: handleTimeRecordEvent()
+      handleTimeRecordEvent({
+        type: "AddTimeRecord",
+        timeRecord: time,
+      })
       setTime(resetTimeRecord())
     } else {
       console.log("(D): showErrMsg")
@@ -257,10 +265,11 @@ export function EditTimeBlock( { initTimeRecord, addTimeRecord, cfgCategories } 
     }
   }
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSubmit(e)
-    }
+      if (e.key === 'Enter') {
+        handleSubmit(e)
+      }
   }
+  // TODO: Add support for 'handleChangeTimeRecord()'
 
   return (
     <>
