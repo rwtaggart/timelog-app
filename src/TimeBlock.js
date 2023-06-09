@@ -48,6 +48,7 @@ const durationLabels = [ 'duration' ]
 export const DateZeros = { year: 0, month:0, date:0 }
 export const TimeZeros = { hours: 0, minutes:0, seconds:0, milliseconds:1 }
 export const NullTime = {
+  // TODO: rename 'NullTime' => 'EmptyTimeRecord'
   id: 0,
   date: "",
   start: "",
@@ -59,14 +60,17 @@ export const NullTime = {
   topic: [],
 }
 
-export const resetTimeRecord = (initDate, initStart, isInitEnd, tl) => {
+export const resetTimeRecord = (prevTimeRecord) => {
+  // TODO: rename 'resetTimeRecord()' => 'copyTimeRecord()' or 'createFromTimeRecord()' ?
+  // TAKE OUT:  OLD PARMS - {initDate, initStart, isInitEnd, tl}
   // FIXME: what is the "tl" arg??
   const now = timeFmt(new Date())
   let timeRecord = {...NullTime}
-  timeRecord.date = initDate != null ? initDate : dateFmt(setDT(new Date(), TimeZeros))
-  timeRecord.start = initStart != null ? initStart : now
+  // TODO: Add proper if (prevTimeRecord != null) { ... } block
+  timeRecord.date = prevTimeRecord != null ? prevTimeRecord.date : dateFmt(setDT(new Date(), TimeZeros))
+  timeRecord.start = prevTimeRecord != null ? prevTimeRecord.end : now
   console.log('(D): resetTimeRecord: ', now, timeRecord.start)
-  if ( isInitEnd && now !== timeRecord.start 
+  if ( prevTimeRecord != null && now !== timeRecord.start
        && isBefore(
                     parseDateTime(timeRecord.date, timeRecord.start), 
                     parseDateTime(timeRecord.date, now)
@@ -161,7 +165,7 @@ export function EditTimeBlock( { initTimeRecord, timeLog, handleTimeRecordEvent,
   // TODO: do we need the timeLog here? => yes, to replace initTimeRecord.
   // TODO: rename 'addTimeRecord()' => 'handleTimeRecordEvent()'
   // TODO: replace initTimeRecord with actual "init" logic. See App.js comment for EditTimeBlock
-  const [ time, setTime ]         = useState({...initTimeRecord})  // TODO: Rename time => timeRecord
+  const [ time, setTime ]         = useState({ ...resetTimeRecord(initTimeRecord) })  // TODO: Rename time => timeRecord
   const [ status, setStatus ]     = useState("Not Submitted")
   const [ keyCount, setKeyCount ] = useState(0)
   const [ errors, setErrors ] = useState({})                       // TODO: Combine errors and isShowErrorMsg ? -> YES.

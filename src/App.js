@@ -166,7 +166,6 @@ function App() {
 
   const handleReloadData = async (e) => {
     //TODO: use dispatchTimeLog() instead of setTimesLog() and setDayRating()
-    // ACTIVE:  FIXME: THIS NO LONGER WORKS.
     const data = await loadData(session_id)
     console.log('(D): handleReloadData: ', `${data.length}`, `${data}`)
     // FIXME: handle multiple versions of data...
@@ -343,18 +342,7 @@ function App() {
                 timeLog={timeLog}
                 // addTimeRecord={addTimeRecord}
                 handleTimeRecordEvent={handleTimeRecordEvent}
-                initTimeRecord={
-                  // TODO: Stuff this logic into TimeBlock.js
-                  resetTimeRecord(
-                    timeLog.timeslog.length > 0
-                      ? timeLog.timeslog[timeLog.timeslog.length -1].date
-                      : null,
-                    timeLog.timeslog.length > 0
-                      ? timeLog.timeslog[timeLog.timeslog.length -1].end
-                      : null,
-                    timeLog.timeslog.length > 0,
-                  )
-                }
+                initTimeRecord={timeLog.timeslog.length > 0 ? timeLog.timeslog[timeLog.timeslog.length - 1] : null}
                 cfgCategories={cfgCategories}
              />}
         <br />
