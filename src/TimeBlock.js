@@ -9,6 +9,7 @@ import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
@@ -17,6 +18,9 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import EditIcon from '@mui/icons-material/Edit';
+import ClearIcon from '@mui/icons-material/Clear';
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 
 import setDT from 'date-fns/set'
 import isBefore from 'date-fns/isBefore'
@@ -45,11 +49,11 @@ const Row = styled(Paper)(({ theme }) => ({
 const timeLabels = [ 'start', 'end', ]
 const durationLabels = [ 'duration' ]
 
-export const DateZeros = { year: 0, month:0, date:0 }
-export const TimeZeros = { hours: 0, minutes:0, seconds:0, milliseconds:1 }
-export const NullTime = {
+const DateZeros = { year: 0, month:0, date:0 }
+const TimeZeros = { hours: 0, minutes:0, seconds:0, milliseconds:1 }
+const NullTime = {
   // TODO: rename 'NullTime' => 'EmptyTimeRecord'
-  id: 0,
+  id: null,
   date: "",
   start: "",
   end: "",
@@ -60,12 +64,13 @@ export const NullTime = {
   topic: [],
 }
 
-export const resetTimeRecord = (prevTimeRecord) => {
-  // TODO: rename 'resetTimeRecord()' => 'copyTimeRecord()' or 'createFromTimeRecord()' ?
+const createNewFromTimeRecord = (prevTimeRecord, timeRecordId) => {
+  // TODO: rename 'resetTimeRecord()' => 'copyTimeRecord()' or 'createNewFromTimeRecord()' ?
   // TAKE OUT:  OLD PARMS - {initDate, initStart, isInitEnd, tl}
   // FIXME: what is the "tl" arg??
   const now = timeFmt(new Date())
   let timeRecord = {...NullTime}
+  timeRecord.id = timeRecordId
   // TODO: Add proper if (prevTimeRecord != null) { ... } block
   timeRecord.date = prevTimeRecord != null ? prevTimeRecord.date : dateFmt(setDT(new Date(), TimeZeros))
   timeRecord.start = prevTimeRecord != null ? prevTimeRecord.end : now
@@ -161,11 +166,11 @@ export function Topics(props) {
 /**
  * EditTimeBlock Component
  */
-export function EditTimeBlock( { initTimeRecord, timeLog, handleTimeRecordEvent, cfgCategories } ) {
+export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTimeRecordEvent, submitAction, cfgCategories } ) {
   // TODO: do we need the timeLog here? => yes, to replace initTimeRecord.
   // TODO: rename 'addTimeRecord()' => 'handleTimeRecordEvent()'
   // TODO: replace initTimeRecord with actual "init" logic. See App.js comment for EditTimeBlock
-  const [ time, setTime ]         = useState({ ...resetTimeRecord(initTimeRecord) })  // TODO: Rename time => timeRecord
+  const [ time, setTime ]         = useState(submitAction === 'ChangeTimeRecord' ? {...initTimeRecord} : {...createNewFromTimeRecord(initTimeRecord, timeRecordId)})  // TODO: Rename 'time' => 'timeRecord'
   const [ status, setStatus ]     = useState("Not Submitted")
   const [ keyCount, setKeyCount ] = useState(0)
   const [ errors, setErrors ] = useState({})                       // TODO: Combine errors and isShowErrorMsg ? -> YES.
@@ -259,10 +264,10 @@ export function EditTimeBlock( { initTimeRecord, timeLog, handleTimeRecordEvent,
       console.log('(D): handleSubmit after setTime: ', `${time.duration}, ${time.start}, ${time.end}`)
       // addTimeRecord(time)  // FIXME: REPLACE WITH: handleTimeRecordEvent()
       handleTimeRecordEvent({
-        type: "AddTimeRecord",
+        type: submitAction,
         timeRecord: time,
       })
-      setTime(resetTimeRecord())
+      setTime(createNewFromTimeRecord())
     } else {
       console.log("(D): showErrMsg")
       setisShowErrMsg(true)
@@ -415,11 +420,13 @@ export function ViewTimeLogGrid(props) {
 
 function LogGap(props) {
   const {record, idx, all} = props
+  // TODO: rename 'LogGap' => 'TimeRecordGap' ?
   // let prevIdx = (idx > 0) ? idx-1 : 0
   // console.log('(D): LogGap: ', record.start, idx, prevIdx, fuzzyIntervalOverlap(record, all[prevIdx]))
   return (
     (idx > 0 && !fuzzyIntervalOverlap(record, all[idx-1])) &&
         <tr>
+          <td></td>
           <td></td>
           <td className="missing">{all[idx-1].end}</td>
           <td className="missing">{record.start}</td>
@@ -434,14 +441,22 @@ function LogGap(props) {
   )
 }
 
-export function ViewTimeLogTable(props) {
+export function ViewTimeLogTable( {log, editableTimeRecordIds, handleSetTimeRecordEditMode, handleTimeRecordEvent, cfgCategories } ) {
   /** Render data by generating HTML Table tags */
-  const { log } = props
+  // TODO: add handleEditEvent() prop
+  const [ isEnableDelete, setIsEnableDelete ] = useState(false)
   return (
     <table>
       {/* thead and tbody break the rendering for some reason... */}
       <thead>
         <tr className='theader'>
+          {/* <th>ID</th> */}
+          <th key="theader-edit-button">
+            <Button onClick={() => setIsEnableDelete(!isEnableDelete)}>
+              {/* {isEnableDelete ? "Remove" : "Edit"} */}
+              {isEnableDelete ? "Edit" : "View"}
+            </Button>
+          </th>
           <th>Date</th>
           <th>Start</th>
           <th>End</th>
@@ -451,21 +466,71 @@ export function ViewTimeLogTable(props) {
         </tr>
       </thead>
       <tbody>
-        {log.map((record, idx, all) => 
+        {log.map((record, idx, all) => {
+          const isEditable = editableTimeRecordIds.includes(record.id)
           // <Paper> -- For some reason, <tr> and <Paper> tags are not friends.
-          <>
+          return <>
             <LogGap {...{record: record, idx:idx, all:all}} />
+
             <tr key={ record.start + record.end }>
-              <>
-                <td>{record.date}</td>
-                <td>{record.start}</td>
-                <td>{record.end}</td>
-                <td className="right">{durationFmt(record.date, record.start, record.end)}</td>
-                <td>{record.name}</td>
-                <td>{[...record.categories, record.description].map(cat => (cat && cat != null && cat != "") && <Chip label={cat} variant="outlined" />)}</td>
-              </>
+              { isEditable 
+                ? (
+                  <>
+                    <td colspan="8" className="highlight-edit">
+                      <Stack direction="row" spacing={2}>
+                        <Tooltip title="Cancel">
+                          <IconButton onClick={() => {handleTimeRecordEvent({type: "CancelChangeTimeRecord", timeRecordId: record.id})}} >
+                            <ClearIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <EditTimeBlock
+                          key={log.length}
+                          timeLog={log}
+                          // addTimeRecord={addTimeRecord}
+                          handleTimeRecordEvent={handleTimeRecordEvent}
+                          submitAction="ChangeTimeRecord"
+                          timeRecordId={record.id}
+                          initTimeRecord={record}
+                          cfgCategories={cfgCategories}
+                      />
+                      </Stack>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    {/* <td>{record.id}</td> */}
+                    <td>
+                    { isEnableDelete && 
+                      <Stack 
+                        direction="row"
+                        justifyContent="flex-end"
+                        alignItems="flex-end"
+                      >
+                          <Tooltip title="Delete">
+                            <IconButton color='error' onClick={() => {handleTimeRecordEvent({type: "DeleteTimeRecord", timeRecordId: record.id})}} >
+                              <RemoveCircleIcon />
+                            </IconButton>
+                          </Tooltip>
+                        <Tooltip title="Edit">
+                          <IconButton color='inherit' onClick={() => {handleSetTimeRecordEditMode(record.id)}} >
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    }
+                    </td>
+                    <td>{record.date}</td>
+                    <td>{record.start}</td>
+                    <td>{record.end}</td>
+                    <td className="right">{durationFmt(record.date, record.start, record.end)}</td>
+                    <td>{record.name}</td>
+                    <td>{[...record.categories, record.description].map(cat => (cat && cat != null && cat != "") && <Chip label={cat} variant="outlined" />)}</td>
+                  </>
+                )
+              }
             </tr>
           </>
+        }
         )}
       </tbody>
     </table>

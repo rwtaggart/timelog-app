@@ -38,7 +38,7 @@ export function parseTime(timeStr) {
 }
 
 export function durationFmt(dateStr, startStr, endStr) {
-  console.log("(D): durationFmt: ", dateStr, startStr, endStr)
+  // console.log("(D): durationFmt: ", dateStr, startStr, endStr)
   try {
     const dur = intervalToDuration({
       start: parseDateTime(dateStr, startStr), 
