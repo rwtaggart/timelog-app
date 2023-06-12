@@ -35,7 +35,7 @@ import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadD
 // isDev as isDevFnc
 
 import { categories } from './constants.js';
-import { ViewTimeLogTable, EditTimeBlock, resetTimeRecord, NullTime, TimeZeros } from './TimeBlock.js';
+import { ViewTimeLogTable, EditTimeBlock } from './TimeBlock.js';
 import { DayRatingGroup, customRatingIcons } from './DayRating.js';
 
 // TODO: rename 'timeslog' => 'timeRecords'; REQUIRES SCHEMA COMPATIBILITY UPDATE
@@ -44,6 +44,22 @@ const TIME_LOG_SCHEMA = {
   v: STATE_VERSION, 
   rating: 0, 
   timeslog: []
+}
+
+function sortAndWriteTimesLog(session_id, prevTimeLog, modTimeRecords) {
+  modTimeRecords.sort((a, b) => (
+    isBefore(
+      parseDateTime(a.date, a.start), 
+      parseDateTime(b.date, b.start)
+    ) ? -1 : 1
+  ))
+  // TODO: Store entire "state" persistently with useReducer() above... ?
+  const modTimeLog = {
+    ...prevTimeLog,
+    timeslog: modTimeRecords,
+  }
+  writeData(session_id, modTimeLog)  // Question: Stuff this in the action "event handler" ? => no.
+  return modTimeLog
 }
 
 function timeLogReducer(prevTimeLog, action) {
@@ -59,31 +75,30 @@ function timeLogReducer(prevTimeLog, action) {
     }
     case "AddTimeRecord": {
       const updateTimesLog = [...prevTimeLog.timeslog, action.timeRecord]
-      updateTimesLog.sort((a, b) => (
-        isBefore(
-          parseDateTime(a.date, a.start), 
-          parseDateTime(b.date, b.start)
-        ) ? -1 : 1
-      ))
-      // TODO: Store entire "state" persistently with useReducer() above...
-      const modTimeLog = {
-        ...prevTimeLog,
-        timeslog: updateTimesLog,
-      }
-      writeData(action.session_id, modTimeLog)  // Question: Stuff this in the action "event handler" ?
-      return modTimeLog
+      return sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog)
     }
     case "ChangeTimeRecord": {
+      const updateTimesLog = prevTimeLog.timeslog.map((timeRecord) => (timeRecord.id === action.timeRecord.id) ? action.timeRecord : timeRecord)
+      return sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog)
+    }
+    case "DeleteTimeRecord": {
+      const updateTimesLog = prevTimeLog.timeslog.filter(timeRecord => (timeRecord.id !== action.timeRecordId))
+      return sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog)
+    }
+    case "CancelChangeTimeRecord": {
       return prevTimeLog
     }
     case "ReloadTimeLog": {
-      // TODO: Add support to load all the data into this object.
       return action.timeLogData
     }
     default: {
       throw Error('Action not supported: ' + action.type)
     }
   }
+}
+
+function timeRecordsMaxId (accumulator, current) {
+  return Math.max(accumulator, current.id)
 }
 
 function App() {
@@ -102,7 +117,9 @@ function App() {
   // const [ dayRating, setDayRating ] = useState(0)  // TODO: combine with timesLog and STATE_VERSION
 
   // TODO: rename to dispatchTimeLogAction ?
-  const [timeLog, dispatchTimeLog] = useReducer(timeLogReducer, TIME_LOG_SCHEMA)
+  const [ nextTimeRecordId, setNextTimeRecordId ] = useState(0)
+  const [ editableTimeRecordIds, setEditableTimeRecordIds ] = useState([])
+  const [ timeLog, dispatchTimeLog ] = useReducer(timeLogReducer, TIME_LOG_SCHEMA)
 
   const darkTheme = createTheme({
     palette: {
@@ -126,11 +143,21 @@ function App() {
   console.log('(D): cfgCategories: ' + JSON.stringify(cfgCategories))  // Note: this may not properly reflect the "actual" state
 
   const handleTimeRecordEvent = (action) => {
-    dispatchTimeLog({...action, session_id: session_id})
-    // TODO: Add 'editMode' to 'timeLogReducer()' ? => no.
-    if (editMode != 'bulk edit') {
-      setEditMode("view")
+    console.log('(D): handleTimeRecordEvent(): ', action.type)
+    if (action.type == "AddTimeRecord") {
+      // QUESTION: Does this belong in the "state" reducer?
+      setNextTimeRecordId(nextTimeRecordId + 1)
+      // TODO: Add 'editMode' to 'timeLogReducer()' ? => no.
+      if (editMode != 'bulk edit') {
+        setEditMode("view")
+      }
     }
+    if (action.type === "ChangeTimeRecord" || action.type === "CancelChangeTimeRecord") {
+      // QUESTION: Does this belong in the "state" reducer?
+      // Remove this record from the list of "editable" records.
+      setEditableTimeRecordIds(editableTimeRecordIds.filter((id) => id !== action.timeRecordId))
+    }
+    dispatchTimeLog({...action, session_id: session_id})
   }
   // const addTimeRecord = (timeRecord) => {
   //   // DEPRECATED: replace with handleTimeRecordEvent()
@@ -157,6 +184,11 @@ function App() {
   //   }
   // }
 
+  const handleSetTimeRecordEditMode = (timeRecordId) => {
+    // TODO: Rename to handleAddEditableTimeRecord() ?
+    setEditableTimeRecordIds([...editableTimeRecordIds, timeRecordId])
+  }
+
   // TODO: Add Save button and key binding
   // const handleWriteData = async (e) => {
   //   console.log('(D): handleWriteData: ', JSON.stringify(timesLog))
@@ -165,7 +197,7 @@ function App() {
   // }
 
   const handleReloadData = async (e) => {
-    //TODO: use dispatchTimeLog() instead of setTimesLog() and setDayRating()
+    // TODO: use dispatchTimeLog() instead of setTimesLog() and setDayRating()
     const data = await loadData(session_id)
     console.log('(D): handleReloadData: ', `${data.length}`, `${data}`)
     // FIXME: handle multiple versions of data...
@@ -174,6 +206,7 @@ function App() {
       if (Array.isArray(data)) {
         // OLD - deprecated. TODO: TAKE OUT.
         // settimesLog(data)
+        setNextTimeRecordId(data.reduce(timeRecordsMaxId, 0) + 1)
         dispatchTimeLog({
           type: "ReloadTimeLog_v0.1.0",
           timeslogArray: data,
@@ -182,6 +215,7 @@ function App() {
         // TODO: Support multiple versions ?
         // setDayRating(data.rating)
         // settimesLog(data.timeslog)
+        setNextTimeRecordId(data.timeslog.reduce(timeRecordsMaxId, 0) + 1)
         dispatchTimeLog({
           type: "ReloadTimeLog",
           timeLogData: data,
@@ -263,13 +297,13 @@ function App() {
               }
             </div>
             <FormControl>
-              <Stack direction="row">
+              <Stack direction="row" spacing={1}>
                 <FormLabel onClick={() => setShowEditModeSw(prevFlag => !prevFlag)}>View Mode:</FormLabel>
                 {showEditModeSw || 
                   <>
-                    {editMode == "view"        && <Stack direction="row" spacing={1}><TableChartIcon /></Stack>}
-                    {editMode == "single edit" && <Stack direction="row" spacing={1}><EditIcon /></Stack>}
-                    {editMode == "bulk edit"   && <Stack direction="row" spacing={1}><RepeatOnIcon /></Stack>}
+                    {editMode == "view"        && <TableChartIcon />}
+                    {editMode == "single edit" && <EditIcon />}
+                    {editMode == "bulk edit"   && <RepeatOnIcon />}
                   </>
                 }
               </Stack>
@@ -334,17 +368,28 @@ function App() {
           </Stack>
         }
         <br />
-          <ViewTimeLogTable log={timeLog.timeslog} />
+          <ViewTimeLogTable 
+            log={timeLog.timeslog} 
+            editableTimeRecordIds={editableTimeRecordIds}
+            handleTimeRecordEvent={handleTimeRecordEvent}
+            handleSetTimeRecordEditMode={handleSetTimeRecordEditMode}
+            cfgCategories={cfgCategories}
+          />
         <br />
-        { editMode != 'view' 
-          && <EditTimeBlock 
+        { editMode != 'view'
+          && <div className="highlight-edit">
+            <EditTimeBlock
                 key={timeLog.timeslog.length}
                 timeLog={timeLog}
                 // addTimeRecord={addTimeRecord}
                 handleTimeRecordEvent={handleTimeRecordEvent}
+                submitAction="AddTimeRecord"
+                timeRecordId={nextTimeRecordId}
                 initTimeRecord={timeLog.timeslog.length > 0 ? timeLog.timeslog[timeLog.timeslog.length - 1] : null}
                 cfgCategories={cfgCategories}
-             />}
+             />
+             </div>
+        }
         <br />
         {/* <div> */}
         {/* <h1>State:</h1> */}
