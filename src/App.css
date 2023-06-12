@@ -85,6 +85,10 @@
   /* column-gap: 5px; */
 }
 
+.app-margin-left {
+  margin-left: 100px;
+}
+
 .time-column {
   display: flex;
   flex-direction: column;
@@ -160,6 +164,7 @@ tr {
 }
 
 .highlight-edit {
+  margin-right: 12px;
   padding: 5px 12px 5px 12px;
   border: 2px;
   border-style: solid;
