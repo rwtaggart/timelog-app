@@ -64,10 +64,13 @@ const NullTime = {
   topic: [],
 }
 
-const createNewFromTimeRecord = (prevTimeRecord, timeRecordId) => {
+const createNewFromTimeRecord = (prevTimeRecord, timeRecordId, isDuplicate) => {
   // TODO: rename 'resetTimeRecord()' => 'copyTimeRecord()' or 'createNewFromTimeRecord()' ?
   // TAKE OUT:  OLD PARMS - {initDate, initStart, isInitEnd, tl}
   // FIXME: what is the "tl" arg??
+  if (isDuplicate) {
+    return {...NullTime, ...prevTimeRecord, id: timeRecordId}
+  }
   const now = timeFmt(new Date())
   let timeRecord = {...NullTime}
   timeRecord.id = timeRecordId
@@ -166,11 +169,11 @@ export function Topics(props) {
 /**
  * EditTimeBlock Component
  */
-export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTimeRecordEvent, submitAction, cfgCategories } ) {
+export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTimeRecordEvent, submitAction, isDuplicate, cfgCategories } ) {
   // TODO: do we need the timeLog here? => yes, to replace initTimeRecord.
   // TODO: rename 'addTimeRecord()' => 'handleTimeRecordEvent()'
   // TODO: replace initTimeRecord with actual "init" logic. See App.js comment for EditTimeBlock
-  const [ time, setTime ]         = useState(submitAction === 'ChangeTimeRecord' ? {...initTimeRecord} : {...createNewFromTimeRecord(initTimeRecord, timeRecordId)})  // TODO: Rename 'time' => 'timeRecord'
+  const [ time, setTime ]         = useState(submitAction === 'ChangeTimeRecord' ? {...initTimeRecord} : {...createNewFromTimeRecord(initTimeRecord, timeRecordId, isDuplicate)})  // TODO: Rename 'time' => 'timeRecord'
   const [ status, setStatus ]     = useState("Not Submitted")
   const [ keyCount, setKeyCount ] = useState(0)
   const [ errors, setErrors ] = useState({})                       // TODO: Combine errors and isShowErrorMsg ? -> YES.
@@ -418,16 +421,24 @@ export function ViewTimeLogGrid(props) {
   )
 }
 
-function LogGap(props) {
-  const {record, idx, all} = props
+function LogGap({ record, idx, all, handleAddRecord }) {
   // TODO: rename 'LogGap' => 'TimeRecordGap' ?
   // let prevIdx = (idx > 0) ? idx-1 : 0
   // console.log('(D): LogGap: ', record.start, idx, prevIdx, fuzzyIntervalOverlap(record, all[prevIdx]))
+
   return (
     (idx > 0 && !fuzzyIntervalOverlap(record, all[idx-1])) &&
         <tr>
           <td></td>
-          <td></td>
+          <td>
+            <Stack direction="row" justifyContent="flex-end">
+              <Tooltip title="Add">
+                <IconButton color="warning" onClick={() => handleAddRecord({id: record.id, date: record.date, start: all[idx-1].end, end: record.start})}>
+                  <AddCircleIcon />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </td>
           <td className="missing">{all[idx-1].end}</td>
           <td className="missing">{record.start}</td>
           { 
@@ -441,10 +452,11 @@ function LogGap(props) {
   )
 }
 
-export function ViewTimeLogTable( {log, editableTimeRecordIds, handleSetTimeRecordEditMode, handleTimeRecordEvent, cfgCategories } ) {
+export function ViewTimeLogTable( {log, editableTimeRecordIds, nextTimeRecordId, handleSetTimeRecordEditMode, handleTimeRecordEvent, cfgCategories } ) {
   /** Render data by generating HTML Table tags */
   // TODO: add handleEditEvent() prop
   const [ isEnableDelete, setIsEnableDelete ] = useState(false)
+  const [ editTimeGapRecords, setEditTimeGapRecords ] = useState([])
   return (
     <table>
       {/* thead and tbody break the rendering for some reason... */}
@@ -468,12 +480,47 @@ export function ViewTimeLogTable( {log, editableTimeRecordIds, handleSetTimeReco
       <tbody>
         {log.map((record, idx, all) => {
           const isEditable = editableTimeRecordIds.includes(record.id)
+          const editTimeGapRecord = editTimeGapRecords.filter(timeGapRecord => timeGapRecord.id === record.id)[0]
           // <Paper> -- For some reason, <tr> and <Paper> tags are not friends.
           return <>
-            <LogGap {...{record: record, idx:idx, all:all}} />
+            <LogGap {...{record: record, idx:idx, all:all}} handleAddRecord={timeGapRecord => setEditTimeGapRecords([...editTimeGapRecords, timeGapRecord])} />
+            {/* <span>Time Gap Record: "{JSON.stringify(editTimeGapRecord)}" - {editTimeGapRecord == null ? "null" : "Valid"}</span> */}
+            { (editTimeGapRecord != null) &&
+              <>
+                <td colspan="8" className="highlight-edit">
+                  <Stack direction="row" spacing={2}>
+                    <Tooltip title="Cancel">
+                      <IconButton
+                        onClick={() => {
+                          handleTimeRecordEvent({type: "CancelChangeTimeRecord", timeRecordId: record.id})
+                          setEditTimeGapRecords(editTimeGapRecords.filter(timeGapRecord => timeGapRecord.id !== record.id))
+                      }} >
+                        <ClearIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <EditTimeBlock
+                      key={log.length}
+                      timeLog={log}
+                      // addTimeRecord={addTimeRecord}
+                      handleTimeRecordEvent={(action) => {
+                        if (action.type === "AddTimeRecord") {
+                          setEditTimeGapRecords(editTimeGapRecords.filter(timeGapRecord => timeGapRecord.id !== record.id))
+                        }
+                        handleTimeRecordEvent(action)
+                      }}
+                      submitAction="AddTimeRecord"
+                      isDuplicate={true}
+                      timeRecordId={nextTimeRecordId}
+                      initTimeRecord={{...NullTime, ...editTimeGapRecord}}
+                      cfgCategories={cfgCategories}
+                  />
+                  </Stack>
+                </td>
+              </>
+            }
 
             <tr key={ record.start + record.end }>
-              { isEditable 
+              { isEditable
                 ? (
                   <>
                     <td colspan="8" className="highlight-edit">

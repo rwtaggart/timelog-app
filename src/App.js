@@ -4,6 +4,7 @@ import './App.css';
 import isBefore from 'date-fns/isBefore';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -26,6 +27,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
 import GridOnIcon from '@mui/icons-material/GridOn';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
@@ -371,13 +373,14 @@ function App() {
           <ViewTimeLogTable 
             log={timeLog.timeslog} 
             editableTimeRecordIds={editableTimeRecordIds}
+            nextTimeRecordId={nextTimeRecordId}
             handleTimeRecordEvent={handleTimeRecordEvent}
             handleSetTimeRecordEditMode={handleSetTimeRecordEditMode}
             cfgCategories={cfgCategories}
           />
         <br />
         { editMode != 'view'
-          && <div className="highlight-edit">
+          ? (<div className="highlight-edit">
             <EditTimeBlock
                 key={timeLog.timeslog.length}
                 timeLog={timeLog}
@@ -389,6 +392,19 @@ function App() {
                 cfgCategories={cfgCategories}
              />
              </div>
+          ) : (
+            <div className="app-margin-left">
+              <Tooltip title="Add">
+                <Button onClick={() => setEditMode("single edit")}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <AddCircleIcon />
+                    <Typography>Add Record</Typography>
+                    {/* Add Record */}
+                  </Stack>
+                </Button>
+              </Tooltip>
+            </div>
+          )
         }
         <br />
         {/* <div> */}
