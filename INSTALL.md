@@ -116,9 +116,14 @@ https://mui.com/material-ui/material-icons/
 
 
 ## Run
+```
+> ./run.sh  # Starts dev env and copies command onto clipboard
+
+# Executes the following:
 > export ELECTRON_IS_DEV=1
 > npm run devb &
 > npm run deve
+```
 
 Note: for some reason this doesn't work anymore, after adding electron forge packaging.
 > npm run dev
