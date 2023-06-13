@@ -78,6 +78,7 @@ Create a binary executable for electron
 > open ./out/time-log-ui-darwin-arm64/time-log-ui.app  # test app
 > rm -r ~/lib/time-log-ui.app
 > cp -r ./out/time-log-ui-darwin-arm64/time-log-ui.app  ~/lib/time-log-ui.app
+> cp -r ./out/time-log-ui-darwin-arm64/time-log-ui.app  "~/Applications/Time Log.app"
 ```
 
 
