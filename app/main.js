@@ -154,6 +154,7 @@ app.whenReady()
   ipcMain.handle('datastore.load',  appUtils.loadDataJSON)
   ipcMain.handle('config.categories.load',  appUtils.loadCfgCategories)
   ipcMain.handle('config.categories.edit',  appUtils.editCfgCategories)
+  ipcMain.handle('config.absFileName',      appUtils.absFileName)
   createWindow()
 
   app.on('activate', function () {

@@ -93,6 +93,7 @@ function fileName(date, session_id) {
 }
 
 function absFileName(session_id) {
+  console.log('(D): absFileName(): ', session_id==null, session_id==="")
   return path.join(outDirName, fileName(activeSessionDate, session_id))
 }
 
@@ -191,5 +192,6 @@ module.exports = {
   loadCfgCategories: loadCfgCategories,
   editCfgCategories: editCfgCategories,
   checkOutDir: checkOutDir,
+  absFileName: absFileName,
   OutputDirectoryMissingError: OutputDirectoryMissingError,
 }

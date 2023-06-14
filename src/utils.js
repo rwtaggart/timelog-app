@@ -111,6 +111,11 @@ export async function editCfgCategories() {
   return await window.config.categories.edit()
 }
 
+export async function absFileName(session_id) {
+  hasAPI('config')
+  return await window.config.absFileName(session_id)
+}
+
 export async function isDev(){
   hasAPI('appMeta')
   return await window.appMeta.isDev()

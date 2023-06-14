@@ -1,6 +1,7 @@
 # TODO:
 These are the remaining tasks:
 <ul>
+  <li>Render output file name in settings tab</li>
   <li>Update categories config: add colors and render grouping</li>
   <li>Add "break" button</li>
   <li>Add Date picker to record edit view</li>
