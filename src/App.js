@@ -34,7 +34,7 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, durationFmt, writeData, loadData, loadCfgCategories, editCfgCategories, isDev as isDevFnc} from './utils.js';
+import { parseDateTime, durationFmt, writeData, loadData, loadCfgCategories, editCfgCategories, absFileName, isDev as isDevFnc} from './utils.js';
 
 // isDev as isDevFnc
 
@@ -120,6 +120,7 @@ function App() {
   const [ isShowSettings, setIsShowSettings ] = useState(false)
   const [ isShowTodo, setIsShowToDo ] = useState(false)
   const [ session_id, setSessionId ] = useState("")  // TODO: Add session_id to timeLogReducer? => yes.
+  const [ timeLogDir, setTimeLogDir ] = useState("")  // TODO: Add session_id to timeLogReducer? => yes.
   const [ editMode, setEditMode ] = useState("view")
   const [ showEditModeSw, setShowEditModeSw ] = useState(false)
   // const [ cfgCategories, setCfgCategories ] = useState(categories)  // TODO: Stuff into a "config" object and useReducer() instead.
@@ -149,6 +150,7 @@ function App() {
     async function loadAndSetInitialStates () { 
       loadCfgCategories().then(v => { if (v != null) { setCfgCategories(v)} })
       isDevFnc().then(v => setIsDev(v))
+      absFileName(session_id != null ? session_id : "").then(path => setTimeLogDir(path))
       handleReloadData()
     }
     loadAndSetInitialStates()
@@ -357,30 +359,33 @@ function App() {
       <main className="app-content">
       <ThemeProvider theme={darkTheme}>
         {/* TODO: Create separate Settings component */}
-        {isShowSettings && 
-          <Stack direction="row" spacing={2}>
-            <Button onClick={handleReloadCfgCategories}>
-              <ReplayIcon />
-              Reload Categories
-            </Button>
-            <Button onClick={handleEditCfgCategories}>
-              <EditIcon />
-              Edit Categories
-            </Button>
-            <FormControl id="settings-form">
-              <TextField
-                  // error={ errors.start }
-                  id="standard-basic"
-                  variant="standard"
-                  label="Session ID"  
-                  value={session_id}
-                  onChange={(e) => {setSessionId(e.target.value)}}
-                  // onKeyPress={handleKeyPress}
-                  // onBlur={(e) => setSessionId(e.target.value)}
-                  // helperText="mm:ss (am/pm)"
-                />
-            </FormControl>
-          </Stack>
+        {isShowSettings &&
+          <>
+            <Stack direction="row" spacing={2}>
+              <Button onClick={handleReloadCfgCategories}>
+                <ReplayIcon />
+                Reload Categories
+              </Button>
+              <Button onClick={handleEditCfgCategories}>
+                <EditIcon />
+                Edit Categories
+              </Button>
+              <FormControl id="settings-form">
+                <TextField
+                    // error={ errors.start }
+                    id="standard-basic"
+                    variant="standard"
+                    label="Session ID"  
+                    value={session_id}
+                    onChange={(e) => {setSessionId(e.target.value); absFileName(e.target.value != null ? e.target.value : "").then(path => setTimeLogDir(path))}}
+                    // onKeyPress={handleKeyPress}
+                    // onBlur={(e) => setSessionId(e.target.value)}
+                    // helperText="mm:ss (am/pm)"
+                  />
+              </FormControl>
+            </Stack>
+            <Typography><b>TimeLog Output Dir:</b>{JSON.stringify(timeLogDir)}</Typography>
+          </>
         }
         <br />
         <Stack direction="row" spacing={5} justifyContent="center" alignItems="center" className="summary-content">
