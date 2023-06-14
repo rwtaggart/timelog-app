@@ -6,6 +6,7 @@
 
 import React, {useState, useRef} from 'react';
 import { styled } from '@mui/material/styles';
+import { orange } from '@mui/material/colors';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Grid';
@@ -433,7 +434,7 @@ function LogGap({ record, idx, all, handleAddRecord }) {
           <td>
             <Stack direction="row" justifyContent="flex-end">
               <Tooltip title="Add">
-                <IconButton color="warning" onClick={() => handleAddRecord({id: record.id, date: record.date, start: all[idx-1].end, end: record.start})}>
+                <IconButton sx={{ color: orange[700] }} onClick={() => handleAddRecord({id: record.id, date: record.date, start: all[idx-1].end, end: record.start})}>
                   <AddCircleIcon />
                 </IconButton>
               </Tooltip>
@@ -452,23 +453,23 @@ function LogGap({ record, idx, all, handleAddRecord }) {
   )
 }
 
-export function ViewTimeLogTable( {log, editableTimeRecordIds, nextTimeRecordId, handleSetTimeRecordEditMode, handleTimeRecordEvent, cfgCategories } ) {
+export function ViewTimeLogTable( {log, editableTimeRecordIds, nextTimeRecordId, handleSetTimeRecordEditMode, handleTimeRecordEvent, editTimeGapRecords, setEditTimeGapRecords, cfgCategories } ) {
   /** Render data by generating HTML Table tags */
   // TODO: add handleEditEvent() prop
-  const [ isEnableDelete, setIsEnableDelete ] = useState(false)
-  const [ editTimeGapRecords, setEditTimeGapRecords ] = useState([])
+  const [ isEnableDelete, setIsEnableDelete ] = useState(true)
+  
+  // <Button onClick={() => setIsEnableDelete(!isEnableDelete)}>
+  //   {/* {isEnableDelete ? "Remove" : "Edit"} */}
+  //   {isEnableDelete ? "Edit" : "View"}
+  // </Button>
+
   return (
     <table>
       {/* thead and tbody break the rendering for some reason... */}
       <thead>
         <tr className='theader'>
           {/* <th>ID</th> */}
-          <th key="theader-edit-button">
-            <Button onClick={() => setIsEnableDelete(!isEnableDelete)}>
-              {/* {isEnableDelete ? "Remove" : "Edit"} */}
-              {isEnableDelete ? "Edit" : "View"}
-            </Button>
-          </th>
+          <th key="theader-edit-button">{/* <Button> isEnableDelete ? "Edit" : "View" </Button> */}</th>
           <th>Date</th>
           <th>Start</th>
           <th>End</th>
@@ -524,12 +525,14 @@ export function ViewTimeLogTable( {log, editableTimeRecordIds, nextTimeRecordId,
                 ? (
                   <>
                     <td colspan="8" className="highlight-edit">
-                      <Stack direction="row" spacing={2}>
-                        <Tooltip title="Cancel">
-                          <IconButton onClick={() => {handleTimeRecordEvent({type: "CancelChangeTimeRecord", timeRecordId: record.id})}} >
-                            <ClearIcon />
-                          </IconButton>
-                        </Tooltip>
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <div>
+                          <Tooltip title="Cancel">
+                            <IconButton onClick={() => {handleTimeRecordEvent({type: "CancelChangeTimeRecord", timeRecordId: record.id})}} >
+                              <ClearIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </div>
                         <EditTimeBlock
                           key={log.length}
                           timeLog={log}
@@ -553,14 +556,14 @@ export function ViewTimeLogTable( {log, editableTimeRecordIds, nextTimeRecordId,
                         justifyContent="flex-end"
                         alignItems="flex-end"
                       >
-                          <Tooltip title="Delete">
+                          {/* <Tooltip title="Delete">
                             <IconButton color='error' onClick={() => {handleTimeRecordEvent({type: "DeleteTimeRecord", timeRecordId: record.id})}} >
                               <RemoveCircleIcon />
                             </IconButton>
-                          </Tooltip>
+                          </Tooltip> */}
                         <Tooltip title="Edit">
-                          <IconButton color='inherit' onClick={() => {handleSetTimeRecordEditMode(record.id)}} >
-                            <EditIcon />
+                          <IconButton color="inherit" size="small" edge="end" onClick={() => {handleSetTimeRecordEditMode(record.id)}} >
+                            <EditIcon size="small" />
                           </IconButton>
                         </Tooltip>
                       </Stack>

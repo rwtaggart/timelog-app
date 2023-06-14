@@ -63,6 +63,7 @@
 
 .app-content {
   margin-left: 19px;
+  margin-right: 19px;
   padding-top: 90px;
 }
 
@@ -86,7 +87,7 @@
 }
 
 .app-margin-left {
-  margin-left: 100px;
+  margin-left: 130px;
 }
 
 .time-column {
@@ -126,6 +127,13 @@
 
 .time-range {
   font-family: monospace;
+}
+
+.summary-content {
+  padding-bottom: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-color: #878d96;  /* Grey 20 */
 }
 
 del {
@@ -169,9 +177,9 @@ tr {
   border: 2px;
   border-style: solid;
   border-radius: 12px;
-  border-color: #d0e2ff;  /* Blue 20 */
-  border-color: #a6c8ff;  /* Blue 20 */
-  border-color: #002d9c;  /* Blue 80 */
+  /* border-color: #d0e2ff;  Blue 20
+  border-color: #a6c8ff;  Blue 20
+  border-color: #002d9c;  Blue 80 */
   border-color: #878d96;  /* Grey 20 */
 }
 

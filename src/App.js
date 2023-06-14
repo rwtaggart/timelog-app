@@ -4,6 +4,7 @@ import './App.css';
 import isBefore from 'date-fns/isBefore';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { grey } from '@mui/material/colors';
 import Typography from '@mui/material/Typography';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -33,7 +34,8 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, writeData, loadData, loadCfgCategories, editCfgCategories, initCategories, isDev as isDevFnc} from './utils.js';
+import { parseDateTime, durationFmt, writeData, loadData, loadCfgCategories, editCfgCategories, isDev as isDevFnc} from './utils.js';
+
 // isDev as isDevFnc
 
 import { categories } from './constants.js';
@@ -44,7 +46,10 @@ import { DayRatingGroup, customRatingIcons } from './DayRating.js';
 const STATE_VERSION = "0.2.0"
 const TIME_LOG_SCHEMA = {
   v: STATE_VERSION, 
-  rating: 0, 
+  rating: 0,
+  date: null,
+  start: null,
+  end: null,
   timeslog: []
 }
 
@@ -56,8 +61,13 @@ function sortAndWriteTimesLog(session_id, prevTimeLog, modTimeRecords) {
     ) ? -1 : 1
   ))
   // TODO: Store entire "state" persistently with useReducer() above... ?
+  const beginRecord = modTimeRecords.at(0)
+  const endRecord = modTimeRecords.at(-1)
   const modTimeLog = {
     ...prevTimeLog,
+    date: beginRecord.date,
+    start: beginRecord != null ? beginRecord.start : null,
+    end: endRecord != null ? endRecord.end : null,
     timeslog: modTimeRecords,
   }
   writeData(session_id, modTimeLog)  // Question: Stuff this in the action "event handler" ? => no.
@@ -105,6 +115,7 @@ function timeRecordsMaxId (accumulator, current) {
 
 function App() {
   /** TODO: Move all "show" boolean settings into a single object **/
+  // TODO: Use a reducer for the "config" app state (isDev, isShowSettings, editMode, cfgCategories, etc.)
   const [ isDev, setIsDev ] = useState(false)
   const [ isShowSettings, setIsShowSettings ] = useState(false)
   const [ isShowTodo, setIsShowToDo ] = useState(false)
@@ -121,6 +132,7 @@ function App() {
   // TODO: rename to dispatchTimeLogAction ?
   const [ nextTimeRecordId, setNextTimeRecordId ] = useState(0)
   const [ editableTimeRecordIds, setEditableTimeRecordIds ] = useState([])
+  const [ editTimeGapRecords, setEditTimeGapRecords ] = useState([])
   const [ timeLog, dispatchTimeLog ] = useReducer(timeLogReducer, TIME_LOG_SCHEMA)
 
   const darkTheme = createTheme({
@@ -157,7 +169,7 @@ function App() {
     if (action.type === "ChangeTimeRecord" || action.type === "CancelChangeTimeRecord") {
       // QUESTION: Does this belong in the "state" reducer?
       // Remove this record from the list of "editable" records.
-      setEditableTimeRecordIds(editableTimeRecordIds.filter((id) => id !== action.timeRecordId))
+      setEditableTimeRecordIds(editableTimeRecordIds.filter((id) => (id !== action.timeRecordId && id !== action.timeRecord.id)))
     }
     dispatchTimeLog({...action, session_id: session_id})
   }
@@ -243,7 +255,7 @@ function App() {
   }
 
   const handleKeyPress = (e) => {
-    console.log('(D): Key=', e.key)
+    if (editableTimeRecordIds.length > 0 || editTimeGapRecords.length > 0) { return }
     if (e.key === 'Escape') {
       setEditMode("view")
     }
@@ -287,6 +299,7 @@ function App() {
     <div className="App">
       <header className="app-header">
       <ThemeProvider theme={darkTheme}>
+          {/* TODO: Create a separate "header" component */}
           <CssBaseline />
           <Stack direction="row" spacing={{ xs: 4, sm: 10, md: 20 }}>
             <div>
@@ -300,7 +313,7 @@ function App() {
             </div>
             <FormControl>
               <Stack direction="row" spacing={1}>
-                <FormLabel onClick={() => setShowEditModeSw(prevFlag => !prevFlag)}>View Mode:</FormLabel>
+                <FormLabel onClick={() => setShowEditModeSw(prevFlag => !prevFlag)}>{editMode === "view" ? "View" : "Edit"} Mode:</FormLabel>
                 {showEditModeSw || 
                   <>
                     {editMode == "view"        && <TableChartIcon />}
@@ -370,12 +383,18 @@ function App() {
           </Stack>
         }
         <br />
+        <Stack direction="row" spacing={5} justifyContent="center" alignItems="center" className="summary-content">
+          <Typography><b>Start:</b> {timeLog.start}</Typography>
+          <Typography><b>End:</b> {timeLog.end}</Typography>
+          <Typography><b>Duration:</b> <span className="right">{durationFmt(timeLog.date, timeLog.start, timeLog.end)}</span></Typography>
+        </Stack>
           <ViewTimeLogTable 
             log={timeLog.timeslog} 
             editableTimeRecordIds={editableTimeRecordIds}
             nextTimeRecordId={nextTimeRecordId}
             handleTimeRecordEvent={handleTimeRecordEvent}
             handleSetTimeRecordEditMode={handleSetTimeRecordEditMode}
+            editTimeGapRecords={editTimeGapRecords} setEditTimeGapRecords={setEditTimeGapRecords}
             cfgCategories={cfgCategories}
           />
         <br />
@@ -393,17 +412,20 @@ function App() {
              />
              </div>
           ) : (
-            <div className="app-margin-left">
-              <Tooltip title="Add">
-                <Button onClick={() => setEditMode("single edit")}>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <AddCircleIcon />
-                    <Typography>Add Record</Typography>
-                    {/* Add Record */}
-                  </Stack>
-                </Button>
-              </Tooltip>
-            </div>
+            <></>
+            // <Stack direction="row" justifyContent="center">
+            // <div className="app-margin-left">
+            //   <Tooltip title="Add">
+            //     <Button onClick={() => setEditMode("single edit")} sx={{color: grey[300]}}>
+            //       <Stack direction="row" spacing={2} alignItems="center">
+            //         <AddCircleIcon />
+            //         <Typography>Add Record</Typography>
+            //         {/* Add Record */}
+            //       </Stack>
+            //     </Button>
+            //   </Tooltip>
+            // </div>
+            // </Stack>
           )
         }
         <br />
@@ -411,59 +433,6 @@ function App() {
         {/* <h1>State:</h1> */}
         {/* <span>{JSON.stringify(timeLog)}</span> */}
         {/* </div> */}
-        <br />
-        { isShowTodo
-          ? <Button onClick={() => {setIsShowToDo(prevFlag => !prevFlag)}}>
-              Hide ToDos
-              <ExpandLessIcon />
-            </Button>
-
-          : <Button onClick={() => {setIsShowToDo(prevFlag => !prevFlag)}}>
-              Show ToDos
-              <ExpandMoreIcon />
-            </Button>
-        }
-        { isShowTodo && <span>
-          {/* TODO: TAKE THIS OUT */}
-          <h1>ToDo:</h1>
-            <Stack direction="row">
-              <ul>
-                <li><del>Add entry widgets</del></li>
-                <li><del>Add submit button</del></li>
-                <li><del>Add input validation</del></li>
-                <li><del>Add checkboxes for categories</del></li>
-                <li><del>Add checkboxes for topics</del></li>
-                <li><del>Add app state and add record mechanism</del></li>
-                <li><del>Render list of logged records</del></li>
-                <li><del>Add current date when creating a new record</del></li>
-                <li><del>Use HTML Table to render time log view</del></li>
-                <li><del>Use chips for rendering categories</del></li>
-                <li><del>Save on every update</del></li>
-                <li><del>Set output dir from arguments</del></li>
-                <li><del>Use "today" file on start. Enable re-load file from disk.</del></li>
-                <li><del>Automatically order based on start time</del></li>
-                <li><del>Fix isDev (dev) header label</del></li>
-                <li><del>Store config in <code>~/.config/timelog</code> dir</del></li>
-                <li><del>Enable configurable categories</del></li>
-                <li><del>Set duration from start & end</del></li>
-                <li><del>Add current time when creating a new record</del></li>
-              </ul>
-              <ul>
-                <li>Update categories config: add colors and render grouping</li>
-                <li>Render TextField when click on a cell in the table log view</li>
-                <li>Add edit button to each time log record</li>
-                <li>Add "break" button</li>
-                <li>Maintain list of "active" records (no end time)</li>
-                <li>Add Date picker to record edit view</li>
-                <li>Add blank name validation</li>
-                <li>Use Cards for each row?</li>
-              </ul>
-            </Stack>
-              {/* TEMPLATES (uncomment and duplicate): */}
-              {/* <li></li> */}
-              {/* <li><del></del></li> */}
-        </span>
-      }
       </ThemeProvider>
       </main>
     </div>
