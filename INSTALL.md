@@ -75,10 +75,14 @@ Create a binary executable for electron
 > unset ELECTRON_IS_DEV
 > npm run build # build production react app
 > npm run make  # create distributable in ./out
-> open ./out/time-log-ui-darwin-arm64/time-log-ui.app  # test app
-> rm -r ~/lib/time-log-ui.app
-> cp -r ./out/time-log-ui-darwin-arm64/time-log-ui.app  ~/lib/time-log-ui.app
-> cp -r ./out/time-log-ui-darwin-arm64/time-log-ui.app  "~/Applications/Time Log.app"
+> open "./out/Time Log-darwin-arm64/Time Log.app"
+> cp -r "./out/Time Log-darwin-arm64/Time Log.app" "$HOME/Applications/Time Log.app" 
+
+# > rm -r ~/lib/time-log-ui.app
+# > cp -r "./out/Time Log-darwin-arm64/Time Log.app" "~/Applications/Time Log.app"
+# > cp -r ./out/time-log-ui-darwin-arm64/time-log-ui.app  ~/lib/time-log-ui.app
+# > cp -r ./out/time-log-ui-darwin-arm64/time-log-ui.app  "~/Applications/Time Log.app"
+# > open ./out/time-log-ui-darwin-arm64/time-log-ui.app  # test app
 ```
 
 
