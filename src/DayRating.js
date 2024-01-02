@@ -34,7 +34,7 @@ export const customRatingIcons = {
     value: -1,
   },
   3: {
-    icon: <SentimentNeutralIcon color="warning" />,
+    icon: <SentimentNeutralIcon />,
     label: 'OK day',
     value: 0,
   },

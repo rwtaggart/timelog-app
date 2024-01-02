@@ -95,6 +95,7 @@ export async function writeData(session_id, data) {
 }
 
 export async function loadData(session_id) {
+  console.log('(D): loadData session_id: ', typeof session_id)
   hasAPI('dataStore')
   return await window.dataStore.load(session_id)
 }
@@ -112,8 +113,12 @@ export async function editCfgCategories() {
 }
 
 export async function absFileName(session_id) {
-  hasAPI('config')
-  return await window.config.absFileName(session_id)
+  try {
+    hasAPI('config')
+    return await window.config.absFileName(session_id)
+  } catch (e) {
+    console.log('(E): ', e)
+  }
 }
 
 export async function isDev(){
