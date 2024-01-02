@@ -43,10 +43,10 @@ import { ViewTimeLogTable, EditTimeBlock } from './TimeBlock.js';
 import { DayRatingGroup, customRatingIcons } from './DayRating.js';
 
 // TODO: rename 'timeslog' => 'timeRecords'; REQUIRES SCHEMA COMPATIBILITY UPDATE
-const STATE_VERSION = "0.2.0"
+const STATE_VERSION = "0.3.0"
 const TIME_LOG_SCHEMA = {
   v: STATE_VERSION, 
-  rating: 0,
+  rating: null,
   date: null,
   start: null,
   end: null,
@@ -68,6 +68,8 @@ function sortAndWriteTimesLog(session_id, prevTimeLog, modTimeRecords) {
     date: beginRecord.date,
     start: beginRecord != null ? beginRecord.start : null,
     end: endRecord != null ? endRecord.end : null,
+    break: null,
+    unknown: null,
     timeslog: modTimeRecords,
   }
   writeData(session_id, modTimeLog)  // Question: Stuff this in the action "event handler" ? => no.
@@ -392,6 +394,9 @@ function App() {
           <Typography><b>Start:</b> {timeLog.start}</Typography>
           <Typography><b>End:</b> {timeLog.end}</Typography>
           <Typography><b>Duration:</b> <span className="right">{durationFmt(timeLog.date, timeLog.start, timeLog.end)}</span></Typography>
+          <Typography><b>Break:</b> <span className="right">{timeLog.break}</span></Typography>
+          <Typography><b>Unknown:</b> <span className="right">{timeLog.untagged}</span></Typography>
+          {/* ACTIVE: Break & Unknown "labels" */}
         </Stack>
           <ViewTimeLogTable 
             log={timeLog.timeslog} 
