@@ -87,14 +87,20 @@ function dateFileFmt(date) {
 }
 
 function fileName(date, session_id) {
-  let session_str = (session_id == null || session_id == "") ? "" : `_${session_id}`
+  // FIXME: How is it possible for typeof session_id !== string ???
+  if (typeof session_id !== 'string') {
+    console.log('(E): fileName(): session_id is not a string: ', session_id)
+  }
+  // console.log('(D): fileName session_id: ', session_id == null, session_id === "", session_id)
+  let session_str = (typeof session_id !== 'string' || session_id === "") ? "" : `_${session_id}`
   return `${sessionPrefix}_${dateFileFmt(date)}${session_str}.tlog`
   // return `${sessionPrefix}_${dateFileFmt(new Date())}.tlog`
 }
 
 function absFileName(session_id) {
-  console.log('(D): absFileName(): ', session_id==null, session_id==="")
-  return path.join(outDirName, fileName(activeSessionDate, session_id))
+  const fname = path.join(outDirName, fileName(activeSessionDate, session_id))
+  // console.log('(D): absFileName(): ', session_id==null, session_id==="", typeof session_id, session_id, fname)
+  return fname
 }
 
 async function checkOutDir() {

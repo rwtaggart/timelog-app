@@ -238,6 +238,7 @@ function App() {
           type: "ReloadTimeLog",
           timeLogData: data,
         })
+        // TODO: add for version "0.3.0"
       } else {
         throw Error("Unable to load data - version mismatch")
       }
@@ -379,6 +380,7 @@ function App() {
                     variant="standard"
                     label="Session ID"  
                     value={session_id}
+                    // FIXME: this doesn't appear to work as expected
                     onChange={(e) => {setSessionId(e.target.value); absFileName(e.target.value != null ? e.target.value : "").then(path => setTimeLogDir(path))}}
                     // onKeyPress={handleKeyPress}
                     // onBlur={(e) => setSessionId(e.target.value)}
@@ -386,7 +388,7 @@ function App() {
                   />
               </FormControl>
             </Stack>
-            <Typography><b>TimeLog Output Dir:</b>{JSON.stringify(timeLogDir)}</Typography>
+            <Typography><b>TimeLog Output Dir:</b> <code>{JSON.stringify(timeLogDir)}</code></Typography>
           </>
         }
         <br />
