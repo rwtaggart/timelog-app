@@ -6,7 +6,7 @@
  */
 
 /* TIME & DATE UTILS */
-import { format, parse } from 'date-fns'
+import { format, parse, add, differenceInMilliseconds } from 'date-fns'
 import addTime from 'date-fns/add'
 import intervalToDuration from 'date-fns/intervalToDuration'
 import areIntervalsOverlapping from 'date-fns/areIntervalsOverlapping'
@@ -35,6 +35,49 @@ export function parseDateTime(dateStr, timeStr) {
 
 export function parseTime(timeStr) {
   return parse(timeStr, 'h:mmaaa', new Date())
+}
+
+// export function elapsed(ms) {
+//   // def elapsed(t): 
+//     return str(int(math.floor(t / 3600))) + 'h ' + str(int(math.floor(t % 3600 / 60))) + 'm ' + str(round(t % 3600 % 60, 3)) + 's'
+// }
+
+export function milliDurationFmt(ms) {
+  //     return str(int(math.floor(t / 3600))) + 'h ' + str(int(math.floor(t % 3600 / 60))) + 'm ' + str(round(t % 3600 % 60, 3)) + 's'
+  const ts = ms / 1000
+  const h = Math.floor(ts / 3600)
+  const m = Math.floor(ts % 3600 / 60)
+  const s = Math.floor(ts % 3600 % 60)
+  let fmt = ""
+  if (h > 0) {
+    fmt += h + 'h '
+  }
+  if (m > 0) {
+    fmt += m + 'm '
+  }
+  if (s > 0) {
+    fmt += s + 's '
+  }
+  return fmt
+}
+
+const zeroDuration = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0, }
+export function sumDuration(timeLog, category) {
+  let cumDuration = 0
+  for (let record of timeLog.timeslog) {
+    // const dur = intervalToDuration({
+    //   start: parseDateTime(record.date, record.start), 
+    //   end: parseDateTime(record.date, record.end)
+    // })
+    if (record.categories.indexOf(category) >= 0) {
+      cumDuration += differenceInMilliseconds(
+        parseDateTime(record.date, record.end),
+        parseDateTime(record.date, record.start),
+      )
+    }
+  }
+
+  return cumDuration
 }
 
 export function durationFmt(dateStr, startStr, endStr) {
