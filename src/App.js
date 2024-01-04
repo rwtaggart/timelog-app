@@ -34,7 +34,7 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, durationFmt, writeData, loadData, loadCfgCategories, editCfgCategories, absFileName, isDev as isDevFnc} from './utils.js';
+import { parseDateTime, durationFmt, sumDuration, writeData, loadData, loadCfgCategories, editCfgCategories, absFileName, isDev as isDevFnc} from './utils.js';
 
 // isDev as isDevFnc
 
@@ -138,6 +138,8 @@ function App() {
   const [ editTimeGapRecords, setEditTimeGapRecords ] = useState([])
   const [ timeLog, dispatchTimeLog ] = useReducer(timeLogReducer, TIME_LOG_SCHEMA)
 
+  // timeLog.break = sumDuration(timeLog, 'Break')
+
   const darkTheme = createTheme({
     palette: {
       mode: 'dark',
@@ -231,6 +233,7 @@ function App() {
         })
       } else if (data && data.v === "0.2.0") {
         // TODO: Support multiple versions ?
+        // TODO: Fix the "rating" from [1,3] to [-2,+2] scale.
         // setDayRating(data.rating)
         // settimesLog(data.timeslog)
         setNextTimeRecordId(data.timeslog.reduce(timeRecordsMaxId, 0) + 1)
@@ -238,7 +241,15 @@ function App() {
           type: "ReloadTimeLog",
           timeLogData: data,
         })
-        // TODO: add for version "0.3.0"
+      } else if (data && data.v === "0.3.0") {
+        // TODO: Support multiple versions ?
+        // setDayRating(data.rating)
+        // settimesLog(data.timeslog)
+        setNextTimeRecordId(data.timeslog.reduce(timeRecordsMaxId, 0) + 1)
+        dispatchTimeLog({
+          type: "ReloadTimeLog",
+          timeLogData: data,
+        })
       } else {
         throw Error("Unable to load data - version mismatch")
       }
