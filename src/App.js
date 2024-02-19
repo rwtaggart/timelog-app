@@ -34,7 +34,9 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, durationFmt, sumDuration, writeData, loadData, loadCfgCategories, editCfgCategories, absFileName, isDev as isDevFnc} from './utils.js';
+import { parseDateTime, sumDuration, writeData, loadData, loadCfgCategories, editCfgCategories, absFileName, isDev as isDevFnc} from './utils.js';
+
+import { dayjs, dateFmt, timeFmt, durationFmt } from './dayjs_utils.js';
 
 // isDev as isDevFnc
 
@@ -43,36 +45,69 @@ import { ViewTimeLogTable, EditTimeBlock } from './TimeBlock.js';
 import { DayRatingGroup, customRatingIcons } from './DayRating.js';
 
 // TODO: rename 'timeslog' => 'timeRecords'; REQUIRES SCHEMA COMPATIBILITY UPDATE
-const STATE_VERSION = "0.3.0"
+const STATE_VERSION = "0.4.0"
+
+// TODO: Where does this spec. belong?
+// const TIME_RECORD_SCHEMA = {
+//   start,
+//   end,
+// }
+
 const TIME_LOG_SCHEMA = {
   v: STATE_VERSION, 
   rating: null,
-  date: null,
-  start: null,
-  end: null,
-  timeslog: []
+  timeRecords: [],
+  summary: {
+    start: null,
+    end: null,
+    duration: null,
+    break: null,
+    unknown: null,
+  }
+}
+
+/** 
+ * Serialize dayjs objects into ISO strings.
+ * FIXME: The "default" JSON.stringify() behavior doesn't appear to work as expected with electron...
+ */
+function formatAndWriteData(session_id, timelog) {
+  let fmtTimeLog = { ...timelog }
+  fmtTimeLog.timeRecords = timelog.timeRecords.map(record => {
+    let o = {...record, start: record.start.toISOString(), end: record.end.toISOString()}
+    delete o['date']
+    return o
+  })
+  writeData(session_id, fmtTimeLog)
+}
+
+function parseDateData(timeRecords) {
+  return timeRecords.map(record => ({...record, start: dayjs(record.start), end: dayjs(record.end)}))
 }
 
 function sortAndWriteTimesLog(session_id, prevTimeLog, modTimeRecords) {
-  modTimeRecords.sort((a, b) => (
-    isBefore(
-      parseDateTime(a.date, a.start), 
-      parseDateTime(b.date, b.start)
-    ) ? -1 : 1
-  ))
+  modTimeRecords.sort((a, b) => ( a.start.isBefore(b.start) ? -1 : 1 ))
+  // modTimeRecords.sort((a, b) => (
+  //   isBefore(
+  //     parseDateTime(a.date, a.start), 
+  //     parseDateTime(b.date, b.start)
+  //   ) ? -1 : 1
+  // ))
   // TODO: Store entire "state" persistently with useReducer() above... ?
   const beginRecord = modTimeRecords.at(0)
   const endRecord = modTimeRecords.at(-1)
   const modTimeLog = {
     ...prevTimeLog,
-    date: beginRecord.date,
-    start: beginRecord != null ? beginRecord.start : null,
-    end: endRecord != null ? endRecord.end : null,
-    break: null,
-    unknown: null,
-    timeslog: modTimeRecords,
+    summary: {
+      date: dateFmt(beginRecord.start),
+      start: beginRecord != null ? timeFmt(beginRecord.start) : null,
+      end: endRecord != null ? timeFmt(endRecord.end) : null,
+      duration: durationFmt(beginRecord.start, beginRecord.end),
+      break: null,
+      unknown: null,
+    },
+    timeRecords: modTimeRecords,
   }
-  writeData(session_id, modTimeLog)  // Question: Stuff this in the action "event handler" ? => no.
+  formatAndWriteData(session_id, modTimeLog)  // Question: Stuff this in the action "event handler" ? => no.
   return modTimeLog
 }
 
@@ -82,21 +117,21 @@ function timeLogReducer(prevTimeLog, action) {
       let modTimeLog = {
         ...prevTimeLog,
         rating: action.rating,
-        timeslog: [...prevTimeLog.timeslog],
+        timeRecords: [...prevTimeLog.timeRecords],
       }
       writeData(action.session_id, modTimeLog)
       return modTimeLog
     }
     case "AddTimeRecord": {
-      const updateTimesLog = [...prevTimeLog.timeslog, action.timeRecord]
+      const updateTimesLog = [...prevTimeLog.timeRecords, action.timeRecord]
       return sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog)
     }
     case "ChangeTimeRecord": {
-      const updateTimesLog = prevTimeLog.timeslog.map((timeRecord) => (timeRecord.id === action.timeRecord.id) ? action.timeRecord : timeRecord)
+      const updateTimesLog = prevTimeLog.timeRecords.map((timeRecord) => (timeRecord.id === action.timeRecord.id) ? action.timeRecord : timeRecord)
       return sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog)
     }
     case "DeleteTimeRecord": {
-      const updateTimesLog = prevTimeLog.timeslog.filter(timeRecord => (timeRecord.id !== action.timeRecordId))
+      const updateTimesLog = prevTimeLog.timeRecords.filter(timeRecord => (timeRecord.id !== action.timeRecordId))
       return sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog)
     }
     case "CancelChangeTimeRecord": {
@@ -133,7 +168,7 @@ function App() {
   // const [ dayRating, setDayRating ] = useState(0)  // TODO: combine with timesLog and STATE_VERSION
 
   // TODO: rename to dispatchTimeLogAction ?
-  const [ nextTimeRecordId, setNextTimeRecordId ] = useState(0)
+  const [ nextTimeRecordId, setNextTimeRecordId ] = useState(0)  // TODO: TAKE OUT - no longer needed.
   const [ editableTimeRecordIds, setEditableTimeRecordIds ] = useState([])
   const [ editTimeGapRecords, setEditTimeGapRecords ] = useState([])
   const [ timeLog, dispatchTimeLog ] = useReducer(timeLogReducer, TIME_LOG_SCHEMA)
@@ -219,6 +254,10 @@ function App() {
   const handleReloadData = async (e) => {
     // TODO: use dispatchTimeLog() instead of setTimesLog() and setDayRating()
     const data = await loadData(session_id)
+    if (data == null) {
+      console.log('(D): loadData() returned null')
+      return
+    }
     console.log('(D): handleReloadData: ', `${data.length}`, `${data}`)
     // FIXME: handle multiple versions of data...
     // TODO: Handle this in the utils.js "api" part...
@@ -231,8 +270,7 @@ function App() {
           type: "ReloadTimeLog_v0.1.0",
           timeslogArray: data,
         })
-      } else if (data && data.v === "0.2.0") {
-        // TODO: Support multiple versions ?
+      } else if (data && (data.v === "0.2.0" || data.v === "0.3.0")) {
         // TODO: Fix the "rating" from [1,3] to [-2,+2] scale.
         // setDayRating(data.rating)
         // settimesLog(data.timeslog)
@@ -241,11 +279,9 @@ function App() {
           type: "ReloadTimeLog",
           timeLogData: data,
         })
-      } else if (data && data.v === "0.3.0") {
-        // TODO: Support multiple versions ?
-        // setDayRating(data.rating)
-        // settimesLog(data.timeslog)
-        setNextTimeRecordId(data.timeslog.reduce(timeRecordsMaxId, 0) + 1)
+      } else if (data && data.v === "0.4.0") {
+        setNextTimeRecordId(data.timeRecords.reduce(timeRecordsMaxId, 0) + 1)
+        data.timeRecords = parseDateData(data.timeRecords)
         dispatchTimeLog({
           type: "ReloadTimeLog",
           timeLogData: data,
@@ -404,15 +440,15 @@ function App() {
         }
         <br />
         <Stack direction="row" spacing={5} justifyContent="center" alignItems="center" className="summary-content">
-          <Typography><b>Start:</b> {timeLog.start}</Typography>
-          <Typography><b>End:</b> {timeLog.end}</Typography>
-          <Typography><b>Duration:</b> <span className="right">{durationFmt(timeLog.date, timeLog.start, timeLog.end)}</span></Typography>
+          <Typography><b>Start:</b> {timeLog.summary.start}</Typography>
+          <Typography><b>End:</b> {timeLog.summary.end}</Typography>
+          <Typography><b>Duration:</b> <span className="right">{timeLog.summary.duration}</span></Typography>
           <Typography><b>Break:</b> <span className="right">{timeLog.break}</span></Typography>
           <Typography><b>Unknown:</b> <span className="right">{timeLog.untagged}</span></Typography>
           {/* ACTIVE: Break & Unknown "labels" */}
         </Stack>
           <ViewTimeLogTable 
-            log={timeLog.timeslog} 
+            log={timeLog.timeRecords} 
             editableTimeRecordIds={editableTimeRecordIds}
             nextTimeRecordId={nextTimeRecordId}
             handleTimeRecordEvent={handleTimeRecordEvent}
@@ -424,13 +460,13 @@ function App() {
         { editMode != 'view'
           ? (<div className="highlight-edit">
             <EditTimeBlock
-                key={timeLog.timeslog.length}
+                key={timeLog.timeRecords.length}
                 timeLog={timeLog}
                 // addTimeRecord={addTimeRecord}
                 handleTimeRecordEvent={handleTimeRecordEvent}
                 submitAction="AddTimeRecord"
                 timeRecordId={nextTimeRecordId}
-                initTimeRecord={timeLog.timeslog.length > 0 ? timeLog.timeslog[timeLog.timeslog.length - 1] : null}
+                initTimeRecord={timeLog.timeRecords.length > 0 ? timeLog.timeRecords[timeLog.timeRecords.length - 1] : null}
                 cfgCategories={cfgCategories}
              />
              </div>

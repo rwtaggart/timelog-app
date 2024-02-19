@@ -88,7 +88,7 @@ function dateFileFmt(date) {
 function fileName(date, session_id) {
   // FIXME: How is it possible for typeof session_id !== string ???
   if (typeof session_id !== 'string') {
-    console.log('(E): fileName(): session_id is not a string: ', session_id)
+    console.log('(E): fileName(): session_id is not a string (FIXME)')
   }
   // console.log('(D): fileName session_id: ', session_id == null, session_id === "", session_id)
   let session_str = (typeof session_id !== 'string' || session_id === "") ? "" : `_${session_id}`
@@ -149,18 +149,24 @@ async function writeDataJSON(e, session_id, data) {
   //     throw new ValueError('Data must be an array', data)
   // }
   // let buffer = data.map(record => record.join(',')).join('\n')
+  // console.log('(D): writeDataJSON: ', data)
   fs.writeFileSync(fname, JSON.stringify(data))
 }
 
 async function loadDataJSON(e, session_id) {
-  checkOutDir()
-  const fname = absFileName(session_id)
-  console.log('(D): loadData', fname, session_id)
-  // if ( !Array.isArray(data) ) {
-  //     throw new ValueError('Data must be an array', data)
-  // }
-  // let buffer = data.map(record => record.join(',')).join('\n')
-  return JSON.parse(fs.readFileSync(fname))
+  try {
+    checkOutDir()
+    const fname = absFileName(session_id)
+    console.log('(D): loadData', fname, session_id)
+    // if ( !Array.isArray(data) ) {
+    //     throw new ValueError('Data must be an array', data)
+    // }
+    // let buffer = data.map(record => record.join(',')).join('\n')
+    return JSON.parse(fs.readFileSync(fname))
+  } catch (e) {
+    console.warn('(W): caught error: ', e)
+    return null
+  }
 }
 
 async function loadCfgCategories() {

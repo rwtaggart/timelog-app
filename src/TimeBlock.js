@@ -28,7 +28,7 @@ import isBefore from 'date-fns/isBefore'
 import formatDuration from 'date-fns/formatDuration'
 import formatDistance from 'date-fns/formatDistance'
 
-import { parseDateTime, parseTime, parseDate, dateFmt, timeFmt, durationFmt, fuzzyIntervalOverlap } from './utils.js'
+import { dayjs, dateFmt, timeFmt, durationFmt, fuzzyIntervalOverlap, parseDate, parseTime } from './dayjs_utils.js'
 // import { categories } from './constants.js'
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -52,13 +52,12 @@ const durationLabels = [ 'duration' ]
 
 const DateZeros = { year: 0, month:0, date:0 }
 const TimeZeros = { hours: 0, minutes:0, seconds:0, milliseconds:1 }
-const NullTime = {
-  // TODO: rename 'NullTime' => 'EmptyTimeRecord'
+const EmptyTimeRecord = {
   id: null,
-  date: "",
-  start: "",
-  end: "",
-  duration: "",
+  // date: "",
+  start: null,
+  end: null,
+  duration: null,
   name: "",
   description: "",
   categories: [],
@@ -70,20 +69,20 @@ const createNewFromTimeRecord = (prevTimeRecord, timeRecordId, isDuplicate) => {
   // TAKE OUT:  OLD PARMS - {initDate, initStart, isInitEnd, tl}
   // FIXME: what is the "tl" arg??
   if (isDuplicate) {
-    return {...NullTime, ...prevTimeRecord, id: timeRecordId}
+    return {...EmptyTimeRecord, ...prevTimeRecord, id: timeRecordId}
   }
-  const now = timeFmt(new Date())
-  let timeRecord = {...NullTime}
+  const now = dayjs()
+  let timeRecord = {...EmptyTimeRecord}
   timeRecord.id = timeRecordId
   // TODO: Add proper if (prevTimeRecord != null) { ... } block
-  timeRecord.date = prevTimeRecord != null ? prevTimeRecord.date : dateFmt(setDT(new Date(), TimeZeros))
   timeRecord.start = prevTimeRecord != null ? prevTimeRecord.end : now
-  console.log('(D): resetTimeRecord: ', now, timeRecord.start)
-  if ( prevTimeRecord != null && now !== timeRecord.start
-       && isBefore(
-                    parseDateTime(timeRecord.date, timeRecord.start), 
-                    parseDateTime(timeRecord.date, now)
-                   )) {
+  timeRecord.date = timeRecord.start
+  console.log('(D): createNewFromTimeRecord: ', now, timeRecord.start)
+  // QUESTION: Do we need to add isSame(..., 'minute') resolution?
+  if ( prevTimeRecord != null 
+       && !now.isSame(timeRecord.start)
+       && timeRecord.start.isBefore(now)
+  ) {
     timeRecord.end = now
   }
   return timeRecord
@@ -174,7 +173,7 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
   // TODO: do we need the timeLog here? => yes, to replace initTimeRecord.
   // TODO: rename 'addTimeRecord()' => 'handleTimeRecordEvent()'
   // TODO: replace initTimeRecord with actual "init" logic. See App.js comment for EditTimeBlock
-  const [ time, setTime ]         = useState(submitAction === 'ChangeTimeRecord' ? {...initTimeRecord} : {...createNewFromTimeRecord(initTimeRecord, timeRecordId, isDuplicate)})  // TODO: Rename 'time' => 'timeRecord'
+  const [ timeRecord, setTimeRecord ]         = useState(() => (submitAction === 'ChangeTimeRecord' ? {...initTimeRecord} : {...createNewFromTimeRecord(initTimeRecord, timeRecordId, isDuplicate)}))
   const [ status, setStatus ]     = useState("Not Submitted")
   const [ keyCount, setKeyCount ] = useState(0)
   const [ errors, setErrors ] = useState({})                       // TODO: Combine errors and isShowErrorMsg ? -> YES.
@@ -182,11 +181,16 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
 
   const validateDateInput = (label) => {
     return (e) => {
-      console.log('(D): validate value', label, JSON.stringify(time[label]))
-      const d = parseDate(time[label])
-      console.log('(D): parseDate=', d)
+      // console.log('(D): validate date', label, JSON.stringify(timeRecord[label]))
+      let d = null
+      if ( typeof timeRecord[label] === 'string' ) {
+        d = parseDate(timeRecord[label], true)
+      } else if ( timeRecord[label] instanceof dayjs ) {
+        d = timeRecord[label]
+      }
+      // console.log('(D): parseDate=', d)
       let modErrs = {...errors}
-      if (isNaN(d)) { 
+      if ( d == null || !d.isValid() ) {
         modErrs[label] = true 
       } else {
         delete modErrs[label]
@@ -200,10 +204,16 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
   }
   const validateTimeInput = (label) => {
     return (e) => {
-      console.log('(D): validate value', JSON.stringify(time[label]))
-      const d = parseTime(time[label].replace(/\s/g, ''))
+      // console.log('(D): validate time', JSON.stringify(timeRecord[label]))
+      let d = null
+      if ( typeof timeRecord[label] === 'string' ) {
+        d = parseTime(timeRecord[label].replace(/\s/g, ''), true)
+        // console.log('(D): validateTimeInput parseTime: ', d)
+      } else if (timeRecord[label] instanceof dayjs) {
+        d = timeRecord[label]
+      }
       let modErrs = {...errors}
-      if (isNaN(d)) { 
+      if ( d == null || !d.isValid() ) { 
         modErrs[label] = true 
       } else { 
         delete modErrs[label]
@@ -222,6 +232,22 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
         errCount += 1;
       }
     }
+
+    let start = timeRecord.start instanceof dayjs ? timeRecord.start : parseTime(timeRecord.start)
+    let end = timeRecord.end instanceof dayjs ? timeRecord.end : parseTime(timeRecord.end)
+    if ( !start.isSameOrBefore(end) ) {
+      console.log('TIME BEFORE!')
+      let modErrs = { ...errors }
+      modErrs.end = 'end time must occur after start time'
+      setErrors(modErrs)
+      setisShowErrMsg(true)
+      errCount+=1
+    } 
+    // else {
+    //   if (Object.keys(modErrs).length == 0) {
+    //     setisShowErrMsg(false)
+    //   }
+    // }
     console.log('(D): error count', errCount)
     // TODO: Add ValidateDurationInputs
     // for (let idx in durationLabels) {
@@ -230,30 +256,33 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
     //   }
     // }
     // TODO: Add "Blank Name" validation
+    if (errCount == 0 ) {
+      setisShowErrMsg(false)
+    }
     return errCount == 0
   }
 
   const handleTextChange = (label) => {
     return (e) => {
-      let modTime = {...time}
-      modTime[label] = e.target.value
-      if (modTime[label] == 'n') {
+      let modTimeRecord = {...timeRecord}
+      modTimeRecord[label] = e.target.value
+      if (modTimeRecord[label] == 'n') {
         // FIXME: Should only apply to "date" fields
-        modTime[label] = timeFmt(new Date())
+        modTimeRecord[label] = dayjs()
       }
-      console.log('CHG: ', label, e.target.value, modTime)
-      setTime(modTime)
+      console.log('CHG: ', label, e.target.value, modTimeRecord)
+      setTimeRecord(modTimeRecord)
     }
   }
 
   const handleCategoryChange = (selected) => {
-    setTime({...time, 'categories': selected})
+    setTimeRecord({...timeRecord, 'categories': selected})
   }
 
   const handleSubmit = async (e) => {
     // TODO: Rename 'handleSubmit()' => 'handleAddTimeRecord()'
     if (validateInputs()) {
-      console.log('(D): handleSubmit before setTime: ', `${time.duration}, ${time.start}, ${time.end}`)
+      console.log('(D): handleSubmit before setTime: ', `${timeRecord.duration}, ${timeRecord.start}, ${timeRecord.end}`)
       // await setTime(prevTime => {
       //   // FIXME: This doesn't work. Incorrectly call setState() for multiple components during the same "update" hook cycle.
       //   const startdt = parseDateTime(prevTime.date, prevTime.start)
@@ -265,13 +294,22 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
       //   console.log('(D): handleSubmit after setTime: ', `${modTime.duration}, ${modTime.start}, ${modTime.end}`)
       //   return resetTimeRecord()
       // })
-      console.log('(D): handleSubmit after setTime: ', `${time.duration}, ${time.start}, ${time.end}`)
+      console.log('(D): handleSubmit after setTime: ', `${timeRecord.duration}, ${timeRecord.start}, ${timeRecord.end}`)
       // addTimeRecord(time)  // FIXME: REPLACE WITH: handleTimeRecordEvent()
+
+      let modTimeRecord = {...timeRecord}
+      // FIXME: Handle changes to the date... ?
+      if ( typeof timeRecord.start === 'string' ) {
+        modTimeRecord.start = parseTime(timeRecord.start)
+      }
+      if ( typeof timeRecord.end === 'string' ) {
+        modTimeRecord.end = parseTime(timeRecord.end)
+      }
       handleTimeRecordEvent({
         type: submitAction,
-        timeRecord: time,
+        timeRecord: modTimeRecord,
       })
-      setTime(createNewFromTimeRecord())
+      setTimeRecord(createNewFromTimeRecord())
     } else {
       console.log("(D): showErrMsg")
       setisShowErrMsg(true)
@@ -302,7 +340,7 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
             id="standard-basic"
             variant="standard"
             label="date"  
-            value={time.date}
+            value={dateFmt(timeRecord.date)}
             onChange={handleTextChange("date")}
             onKeyPress={handleKeyPress}
             onBlur={validateDateInput("date")}
@@ -314,7 +352,7 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
             id="standard-basic"
             variant="standard"
             label="start"  
-            value={time.start}
+            value={timeFmt(timeRecord.start)}
             onChange={handleTextChange("start")}
             onKeyPress={handleKeyPress}
             onBlur={validateTimeInput("start")}
@@ -325,7 +363,7 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
             id="standard-basic"
             variant="standard"
             label="end"
-            value={time.end}
+            value={timeFmt(timeRecord.end)}
             onChange={handleTextChange("end")}
             onKeyPress={handleKeyPress}
             onBlur={validateTimeInput("end")}
@@ -344,7 +382,7 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
             id="standard-basic"
             variant="standard"
             label="name"
-            value={time.name}
+            value={timeRecord.name}
             onChange={handleTextChange("name")}
             onKeyPress={handleKeyPress}
           />
@@ -352,7 +390,7 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
             id="standard-basic"
             variant="standard"
             label="description"
-            value={time.description}
+            value={timeRecord.description}
             onChange={handleTextChange("description")}
             onKeyPress={handleKeyPress}
           />
@@ -362,8 +400,9 @@ export function EditTimeBlock( { initTimeRecord, timeRecordId, timeLog, handleTi
             </IconButton>
           </Tooltip>
       </Stack>
-      <Categories selected={time.categories} setSelected={handleCategoryChange} cfgCategories={cfgCategories}/>
+      <Categories selected={timeRecord.categories} setSelected={handleCategoryChange} cfgCategories={cfgCategories}/>
       {isShowErrMsg && <span className="error">Time format is invalid</span>}
+      {isShowErrMsg && errors['end'] && <span className="error"> ({errors['end']})</span>}
     </Box>
     </>
   )
@@ -440,11 +479,11 @@ function LogGap({ record, idx, all, handleAddRecord }) {
               </Tooltip>
             </Stack>
           </td>
-          <td className="missing">{all[idx-1].end}</td>
-          <td className="missing">{record.start}</td>
+          <td className="missing">{timeFmt(all[idx-1].end)}</td>
+          <td className="missing">{timeFmt(record.start)}</td>
           { 
             (idx > 0)
-            ? <td className="right missing" >{durationFmt(record.date, record.start, all[idx-1].end)}</td>
+            ? <td className="right missing" >{durationFmt(all[idx-1].end, record.start)}</td>
             : <td></td> 
           }
           <td className="missing">??</td>
@@ -512,7 +551,7 @@ export function ViewTimeLogTable( {log, editableTimeRecordIds, nextTimeRecordId,
                       submitAction="AddTimeRecord"
                       isDuplicate={true}
                       timeRecordId={nextTimeRecordId}
-                      initTimeRecord={{...NullTime, ...editTimeGapRecord}}
+                      initTimeRecord={{...EmptyTimeRecord, ...editTimeGapRecord}}
                       cfgCategories={cfgCategories}
                   />
                   </Stack>
@@ -569,10 +608,10 @@ export function ViewTimeLogTable( {log, editableTimeRecordIds, nextTimeRecordId,
                       </Stack>
                     }
                     </td>
-                    <td>{record.date}</td>
-                    <td>{record.start}</td>
-                    <td>{record.end}</td>
-                    <td className="right">{durationFmt(record.date, record.start, record.end)}</td>
+                    <td>{dateFmt(record.start)}</td>
+                    <td>{timeFmt(record.start)}</td>
+                    <td>{timeFmt(record.end)}</td>
+                    <td className="right">{durationFmt(record.start, record.end)}</td>
                     <td>{record.name}</td>
                     <td>{[...record.categories, record.description].map(cat => (cat && cat != null && cat != "") && <Chip label={cat} variant="outlined" />)}</td>
                   </>

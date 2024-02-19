@@ -1,6 +1,6 @@
 {
   "name": "Time Log",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "main": "app/main.js",
   "homepage": ".",
@@ -13,6 +13,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "date-fns": "^2.29.3",
+    "dayjs": "^1.11.10",
     "electron-squirrel-startup": "^1.0.0",
     "minimist": "^1.2.7",
     "react": "^18.2.0",
