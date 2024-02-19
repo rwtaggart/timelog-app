@@ -1,7 +1,6 @@
 /**
  *  Electron App Utils
  *  For writing data out with date/time stamps, etc.
- *  TODO: rename to "main_utils.js"
  */
 const path = require('path')
 const os = require('os')

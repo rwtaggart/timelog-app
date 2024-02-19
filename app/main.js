@@ -5,7 +5,7 @@ const fs = require('fs')
 // const { mkdir } = require('node:fs/promises')
 const parseArgs = require('minimist')
 
-const appUtils = require('./app_utils.js')
+const appUtils = require('./main_utils.js')
 
 console.log('(D): Running main.js ...')
 
