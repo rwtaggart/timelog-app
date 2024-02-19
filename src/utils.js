@@ -1,8 +1,8 @@
 /**
  * Utility Methods
  * TODO: split into:
- *  - dtutils.js -- for DateTime utilities
- *  - api.js     -- for API calls and stuff
+ *  - dt_utils.js -- for DateTime utilities
+ *  - ds_api.js     -- for API calls and stuff
  */
 
 /* TIME & DATE UTILS */
@@ -10,6 +10,9 @@ import { format, parse, add, differenceInMilliseconds } from 'date-fns'
 import addTime from 'date-fns/add'
 import intervalToDuration from 'date-fns/intervalToDuration'
 import areIntervalsOverlapping from 'date-fns/areIntervalsOverlapping'
+
+// DEPRECATED: date-fns => dayjs
+// TODO: Replace current date-fns utility functions with dayjs_utils.js functions
 
 export function dateFmt(date) {
   if (date instanceof Date && !isNaN(date))
@@ -64,7 +67,7 @@ export function milliDurationFmt(ms) {
 const zeroDuration = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0, }
 export function sumDuration(timeLog, category) {
   let cumDuration = 0
-  for (let record of timeLog.timeslog) {
+  for (let record of timeLog.timeRecords) {
     // const dur = intervalToDuration({
     //   start: parseDateTime(record.date, record.start), 
     //   end: parseDateTime(record.date, record.end)
