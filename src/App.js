@@ -80,6 +80,26 @@ function formatAndWriteData(session_id, timelog) {
   writeData(session_id, fmtTimeLog)
 }
 
+function parseDateDataV2or3(timeRecords) {
+  function parseDatev2or3(dateStr, timeStr) {
+    let date = dayjs(dateStr.slice(5, dateStr.length).replace('.', '-'), 'MMM- DD', true)
+    let time = dayjs(timeStr, 'h:mma', true)
+    console.log('(D): date 1: ', date)
+    console.log('(D): time 2: ', time, time.hour(), time.minute())
+    let modDate = date.hour(time.hour())
+    modDate = modDate.minute(time.minute())
+    console.log('(D): date 3: ', modDate)
+    return modDate
+  }
+  return timeRecords.map(record => {
+    return {
+      ...record,
+      start: parseDatev2or3(record.date, record.start),
+      end: parseDatev2or3(record.date, record.end),
+    }
+  })
+}
+
 function parseDateData(timeRecords) {
   return timeRecords.map(record => ({...record, start: dayjs(record.start), end: dayjs(record.end)}))
 }
@@ -274,7 +294,20 @@ function App() {
         // TODO: Fix the "rating" from [1,3] to [-2,+2] scale.
         // setDayRating(data.rating)
         // settimesLog(data.timeslog)
+        console.log('(D): Loading older version of data.')
         setNextTimeRecordId(data.timeslog.reduce(timeRecordsMaxId, 0) + 1)
+        data.timeRecords = parseDateDataV2or3(data.timeslog)
+        const beginRecord = data.timeRecords.at(0)
+        const endRecord = data.timeRecords.at(-1)
+        data.summary = {
+          date: dateFmt(beginRecord.start),
+          start: beginRecord != null ? timeFmt(beginRecord.start) : null,
+          end: endRecord != null ? timeFmt(endRecord.end) : null,
+          duration: durationFmt(beginRecord.start, beginRecord.end),
+          break: null,
+          unknown: null,
+        }
+        console.log('(D): timeRecords: ', data.timeRecords)
         dispatchTimeLog({
           type: "ReloadTimeLog",
           timeLogData: data,
