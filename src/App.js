@@ -84,11 +84,8 @@ function parseDateDataV2or3(timeRecords) {
   function parseDatev2or3(dateStr, timeStr) {
     let date = dayjs(dateStr.slice(5, dateStr.length).replace('.', '-'), 'MMM- DD', true)
     let time = dayjs(timeStr, 'h:mma', true)
-    console.log('(D): date 1: ', date)
-    console.log('(D): time 2: ', time, time.hour(), time.minute())
     let modDate = date.hour(time.hour())
     modDate = modDate.minute(time.minute())
-    console.log('(D): date 3: ', modDate)
     return modDate
   }
   return timeRecords.map(record => {
