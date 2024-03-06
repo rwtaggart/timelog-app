@@ -136,7 +136,7 @@ function timeLogReducer(prevTimeLog, action) {
         rating: action.rating,
         timeRecords: [...prevTimeLog.timeRecords],
       }
-      writeData(action.session_id, modTimeLog)
+      formatAndWriteData(action.session_id, modTimeLog)
       return modTimeLog
     }
     case "AddTimeRecord": {
