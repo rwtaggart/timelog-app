@@ -23,7 +23,11 @@ import IconButton from '@mui/material/IconButton';
 // import IconButton from '@mui/material/IconButton';
 // import CopyIcon from '@mui/icons-material/ContentCopy';
 import ReplayIcon from '@mui/icons-material/Replay';
+import WorkIcon from '@mui/icons-material/Work';
+import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
+import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
@@ -45,7 +49,7 @@ import { ViewTimeLogTable, EditTimeBlock } from './TimeBlock.js';
 import { DayRatingGroup, customRatingIcons } from './DayRating.js';
 
 // TODO: rename 'timeslog' => 'timeRecords'; REQUIRES SCHEMA COMPATIBILITY UPDATE
-const STATE_VERSION = "0.4.0"
+const STATE_VERSION = "0.5.0"
 
 // TODO: Where does this spec. belong?
 // const TIME_RECORD_SCHEMA = {
@@ -56,6 +60,7 @@ const STATE_VERSION = "0.4.0"
 const TIME_LOG_SCHEMA = {
   v: STATE_VERSION, 
   rating: null,
+  onSite: false,
   timeRecords: [],
   summary: {
     start: null,
@@ -140,6 +145,15 @@ function timeLogReducer(prevTimeLog, action) {
       formatAndWriteData(action.session_id, modTimeLog)
       return modTimeLog
     }
+    case "ModifyOnSite": {
+      let modTimeLog = {
+        ...prevTimeLog,
+        onSite: action.onSite,
+        timeRecords: [...prevTimeLog.timeRecords],
+      }
+      formatAndWriteData(action.session_id, modTimeLog)
+      return modTimeLog
+    }
     case "AddTimeRecord": {
       const updateTimesLog = [...prevTimeLog.timeRecords, action.timeRecord]
       return sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog)
@@ -173,6 +187,7 @@ function App() {
   // TODO: Use a reducer for the "config" app state (isDev, isShowSettings, editMode, cfgCategories, etc.)
   const [ isDev, setIsDev ] = useState(false)
   const [ isShowSettings, setIsShowSettings ] = useState(false)
+  const [ isShowShortcuts, setIsShowShortcuts ] = useState(false)
   const [ isShowTodo, setIsShowToDo ] = useState(false)
   const [ session_id, setSessionId ] = useState("")  // TODO: Add session_id to timeLogReducer? => yes.
   const [ timeLogDir, setTimeLogDir ] = useState("")  // TODO: Add session_id to timeLogReducer? => yes.
@@ -361,6 +376,14 @@ function App() {
     })
   }
 
+  const handleOnSiteEvent = () => {
+    dispatchTimeLog({
+      type: "ModifyOnSite",
+      session_id: session_id,
+      onSite: !timeLog.onSite,
+    })
+  }
+
   // useEffect(() => {
   //   // Store state to disk upon changes
   //   // FIXME: THIS RUNS EVERY TIME AND WILL OVERWRITE VALID FILES.
@@ -418,6 +441,11 @@ function App() {
             </FormControl>
             {/* <Button onClick={handleWriteData}>STORE DATA</Button> */}
             <Box>
+              <Tooltip title="Add Item">
+                <IconButton onClick={() => setEditMode("single edit")}>
+                  <AddCircleIcon />
+                </IconButton>
+              </Tooltip>
               <Tooltip title="Reload Data">
                 <IconButton onClick={handleReloadData}>
                   <ReplayIcon />
@@ -430,9 +458,21 @@ function App() {
                   <SettingsIcon color="" />
                 </IconButton>
               </Tooltip>
+              <Tooltip title="Keyboard Shortcuts">
+                <IconButton onClick={() => setIsShowShortcuts(prevFlag => !prevFlag)}>
+                  <InfoOutlinedIcon />
+                </IconButton>
+              </Tooltip>
             </Box>
           </Stack>
-          <DayRatingGroup rating={timeLog.rating} handleDayRatingEvent={handleDayRatingEvent} />
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Tooltip title="On site">
+              <IconButton onClick={() => handleOnSiteEvent()}>
+                {timeLog.onSite && <WorkOutlineOutlinedIcon color="secondary" /> || <HomeIcon />}
+              </IconButton>
+            </Tooltip>
+            <DayRatingGroup rating={timeLog.rating} handleDayRatingEvent={handleDayRatingEvent} />
+          </Stack>
           {/* <GitHubIcon onClick={e =>  window.location.href=''} /> */}
           {/* <span fixme="hack: why do we need this ??"/> */}
         </ThemeProvider>
@@ -467,6 +507,25 @@ function App() {
               </FormControl>
             </Stack>
             <Typography><b>TimeLog Output Dir:</b> <code>{JSON.stringify(timeLogDir)}</code></Typography>
+          </>
+        }
+        {isShowShortcuts &&
+          <>
+          <table>
+            <thead>
+              <th>Key</th><th>Action</th>
+            </thead>
+            <tbody>
+              <tr><td><code>Esc</code></td><td>Exit edit mode</td></tr>
+              <tr><td><code>e</code></td><td>Single edit mode</td></tr>
+              <tr><td><code>b</code></td><td>Bulk edit mode</td></tr>
+            </tbody>
+          </table>
+            {/* <Stack direction="row" spacing={2}>
+            </Stack> */}
+            {/* <Typography>Esc: Exit edit mode</Typography>
+            <Typography>e: Enter single edit mode</Typography>
+            <Typography>b: Enter bulk edit mode</Typography> */}
           </>
         }
         <br />
