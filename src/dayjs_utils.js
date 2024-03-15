@@ -92,12 +92,38 @@ export function parseTime(timeStr, strict = false) {
 }
 
 
+export function sumDuration(timeRecords, category) {
+  let cumDuration = dayjs.duration()
+  for (let record of timeRecords) {
+    if (record.categories.indexOf(category) >= 0) {
+      cumDuration = cumDuration.add(record.end.diff(record.start), 'milliseconds')
+    }
+  }
+  return cumDuration
+}
+
+
+export function sumUnknownDuration(timeRecords) {
+  let cumDuration = dayjs.duration()
+  for (let idx = 0; idx < timeRecords.length; idx++) {
+    let record = timeRecords[idx]
+    if (record.categories.length === 0) {
+      cumDuration = cumDuration.add(record.end.diff(record.start), 'milliseconds')
+    }
+    if (idx > 0 && !fuzzyIntervalOverlap(record, timeRecords[idx-1])) {
+      cumDuration = cumDuration.add(record.start.diff(timeRecords[idx-1].end), 'milliseconds')
+    }
+  }
+  return cumDuration
+}
+
+
 /**
  * Custom duration format for dayjs
  * start: dayjs
  * end: dayjs
  */
-export function durationFmt(start, end) {
+export function diffDurationFmt(start, end) {
   if ( start == null || end == null ) {
     return ""
   }
@@ -109,6 +135,40 @@ export function durationFmt(start, end) {
     const dur = dayjs.duration(end.diff(start))
     console.log('(D): durationFmt: ', dur)
 
+    let minutes = dur.minutes() + (dur.seconds() > 0 ? 1 : 0)
+    let hours = dur.hours()
+    if (minutes > 59) {
+      hours +=1
+      minutes = 0
+    }
+
+    let s = []
+    if (hours > 0) {
+      s.push('' + hours + 'h')
+    }
+    if (minutes > 0) {
+      s.push('' + minutes + 'm')
+    }
+    return s.join(' ')
+  } catch(e) {
+    console.warn('(W): caught error: ', e)
+   return "Invalid Duration" 
+  }
+}
+
+
+/**
+ * Custom duration format for dayjs
+ * start: dayjs
+ * end: dayjs
+ * TODO: rename durationFmt() => diffDurationFmt()
+ */
+export function durationFmt(dur) {
+  if ( dur == null ) {
+    return ""
+  }
+  try {
+    console.log('(D): durationFmt: ', dur)
     let minutes = dur.minutes() + (dur.seconds() > 0 ? 1 : 0)
     let hours = dur.hours()
     if (minutes > 59) {

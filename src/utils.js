@@ -65,9 +65,9 @@ export function milliDurationFmt(ms) {
 }
 
 const zeroDuration = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0, }
-export function sumDuration(timeLog, category) {
+export function sumDuration(timeRecords, category) {
   let cumDuration = 0
-  for (let record of timeLog.timeRecords) {
+  for (let record of timeRecords) {
     // const dur = intervalToDuration({
     //   start: parseDateTime(record.date, record.start), 
     //   end: parseDateTime(record.date, record.end)
@@ -82,6 +82,24 @@ export function sumDuration(timeLog, category) {
 
   return cumDuration
 }
+
+// export function sumUnknownDuration(timeRecords) {
+//   let cumDuration = 0
+//   for (let record of timeRecords) {
+//     // const dur = intervalToDuration({
+//     //   start: parseDateTime(record.date, record.start), 
+//     //   end: parseDateTime(record.date, record.end)
+//     // })
+//     if (record.categories.indexOf(category) >= 0) {
+//       cumDuration += differenceInMilliseconds(
+//         parseDateTime(record.date, record.end),
+//         parseDateTime(record.date, record.start),
+//       )
+//     }
+//   }
+
+//   return cumDuration
+// }
 
 export function durationFmt(dateStr, startStr, endStr) {
   // console.log("(D): durationFmt: ", dateStr, startStr, endStr)
