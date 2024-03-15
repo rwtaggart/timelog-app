@@ -118,7 +118,7 @@ function sortAndWriteTimesLog(session_id, prevTimeLog, modTimeRecords) {
       date: dateFmt(beginRecord.start),
       start: beginRecord != null ? timeFmt(beginRecord.start) : null,
       end: endRecord != null ? timeFmt(endRecord.end) : null,
-      duration: durationFmt(beginRecord.start, beginRecord.end),
+      duration: durationFmt(beginRecord.start, endRecord.end),
       break: null,
       unknown: null,
     },
