@@ -34,9 +34,9 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, sumDuration, writeData, loadData, loadCfgCategories, editCfgCategories, absFileName, isDev as isDevFnc} from './utils.js';
+import { parseDateTime, writeData, loadData, loadCfgCategories, editCfgCategories, absFileName, isDev as isDevFnc} from './utils.js';
 
-import { dayjs, dateFmt, timeFmt, durationFmt } from './dayjs_utils.js';
+import { dayjs, dateFmt, timeFmt, sumDuration, sumUnknownDuration, diffDurationFmt, durationFmt } from './dayjs_utils.js';
 
 // isDev as isDevFnc
 
@@ -118,9 +118,10 @@ function sortAndWriteTimesLog(session_id, prevTimeLog, modTimeRecords) {
       date: dateFmt(beginRecord.start),
       start: beginRecord != null ? timeFmt(beginRecord.start) : null,
       end: endRecord != null ? timeFmt(endRecord.end) : null,
-      duration: durationFmt(beginRecord.start, endRecord.end),
-      break: null,
-      unknown: null,
+      duration: diffDurationFmt(beginRecord.start, endRecord.end),
+      break: durationFmt(sumDuration(modTimeRecords, 'Break')),
+      active: durationFmt(dayjs.duration(endRecord.end.diff(beginRecord.start)).subtract(sumDuration(modTimeRecords, 'Break'))),
+      unknown: durationFmt(sumUnknownDuration(modTimeRecords)),
     },
     timeRecords: modTimeRecords,
   }
@@ -300,7 +301,7 @@ function App() {
           date: dateFmt(beginRecord.start),
           start: beginRecord != null ? timeFmt(beginRecord.start) : null,
           end: endRecord != null ? timeFmt(endRecord.end) : null,
-          duration: durationFmt(beginRecord.start, beginRecord.end),
+          duration: diffDurationFmt(beginRecord.start, beginRecord.end),
           break: null,
           unknown: null,
         }
@@ -469,12 +470,14 @@ function App() {
           </>
         }
         <br />
+        {/* <Stack direction="row" spacing={5} justifyContent="center" alignItems="center"> */}
         <Stack direction="row" spacing={5} justifyContent="center" alignItems="center" className="summary-content">
           <Typography><b>Start:</b> {timeLog.summary.start}</Typography>
           <Typography><b>End:</b> {timeLog.summary.end}</Typography>
           <Typography><b>Duration:</b> <span className="right">{timeLog.summary.duration}</span></Typography>
-          <Typography><b>Break:</b> <span className="right">{timeLog.break}</span></Typography>
-          <Typography><b>Unknown:</b> <span className="right">{timeLog.untagged}</span></Typography>
+          <Typography><b>Active:</b> <span className="right">{timeLog.summary.active}</span></Typography>
+          <Typography><b>Break:</b> <span className="right">{timeLog.summary.break}</span></Typography>
+          <Typography><b>Unknown:</b> <span className="right">{timeLog.summary.unknown}</span></Typography>
           {/* ACTIVE: Break & Unknown "labels" */}
         </Stack>
           <ViewTimeLogTable 

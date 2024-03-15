@@ -28,7 +28,7 @@ import isBefore from 'date-fns/isBefore'
 import formatDuration from 'date-fns/formatDuration'
 import formatDistance from 'date-fns/formatDistance'
 
-import { dayjs, dateFmt, timeFmt, durationFmt, fuzzyIntervalOverlap, parseDate, parseTime } from './dayjs_utils.js'
+import { dayjs, dateFmt, timeFmt, durationFmt, diffDurationFmt, fuzzyIntervalOverlap, parseDate, parseTime } from './dayjs_utils.js'
 // import { categories } from './constants.js'
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -483,7 +483,7 @@ function LogGap({ record, idx, all, handleAddRecord }) {
           <td className="missing">{timeFmt(record.start)}</td>
           { 
             (idx > 0)
-            ? <td className="right missing" >{durationFmt(all[idx-1].end, record.start)}</td>
+            ? <td className="right missing" >{diffDurationFmt(all[idx-1].end, record.start)}</td>
             : <td></td> 
           }
           <td className="missing">??</td>
@@ -611,7 +611,7 @@ export function ViewTimeLogTable( {log, editableTimeRecordIds, nextTimeRecordId,
                     <td>{dateFmt(record.start)}</td>
                     <td>{timeFmt(record.start)}</td>
                     <td>{timeFmt(record.end)}</td>
-                    <td className="right">{durationFmt(record.start, record.end)}</td>
+                    <td className="right">{diffDurationFmt(record.start, record.end)}</td>
                     <td>{record.name}</td>
                     <td>{[...record.categories, record.description].map(cat => (cat && cat != null && cat != "") && <Chip label={cat} variant="outlined" />)}</td>
                   </>
