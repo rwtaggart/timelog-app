@@ -325,7 +325,7 @@ function App() {
           type: "ReloadTimeLog",
           timeLogData: data,
         })
-      } else if (data && data.v === "0.4.0") {
+      } else if (data && (data.v === "0.4.0" || data.v === "0.5.0")) {
         setNextTimeRecordId(data.timeRecords.reduce(timeRecordsMaxId, 0) + 1)
         data.timeRecords = parseDateData(data.timeRecords)
         dispatchTimeLog({
