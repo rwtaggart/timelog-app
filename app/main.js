@@ -169,7 +169,7 @@ app.whenReady()
 
   ipcMain.handle('dataStore.writeTimeRecord', dbUtils.insertTimeRecord)
   ipcMain.handle('dataStore.writeAllTimeRecords', (ipcEvent, data) => { dbUtils.insertManyTimeRecords(data); })
-  ipcMain.handle('dataStore.writeDaySummary', dbUtils.updateDaySummary)
+  ipcMain.handle('dataStore.writeDaySummary', (ipcEvent, data) => { dbUtils.updateDaySummary(data); })
 
   ipcMain.handle('dataStore.loadTimeRecords', dbUtils.loadTimeRecords)
   ipcMain.handle('dataStore.loadDaySummary',  dbUtils.loadDaySummary)

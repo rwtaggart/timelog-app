@@ -210,7 +210,7 @@ async function insertManyTimeRecords(timeRecords) {
           $categories:   tr.categories,
           $topic:        tr.topic,
         }
-        db.run(insertManyTimeRecordsSql, sqlParams)
+        _db.run(insertManyTimeRecordsSql, sqlParams)
       })
       _db.run('COMMIT', (err) => {
         if ( err != null ) {
@@ -224,7 +224,9 @@ async function insertManyTimeRecords(timeRecords) {
 }
 
 // TODO: USE INSERT OR REPLACE ABOVE INSTEAD OF SEPARATE UPDATE FUNCTION?
+// DEPRECATED - DO NOT USE
 async function updateTimeRecord(timeRecord) {
+  console.warn('(W): updateTimeRecord() - DEPRECATED!!!')
   await connect_db()
   const updateTimeRecordSql = "UPDATE timeRecord \
                                SET (id, start, end, duration, name, description, categories, topic) \
@@ -292,6 +294,7 @@ async function loadTimeRecords() {
       if ( err != null ) {
         return reject(err)
       } else {
+        console.log('(D): loadTimeRecords(): ', rows)
         return resolve(rows)
       }
     })
@@ -306,6 +309,7 @@ async function loadDaySummary() {
       if ( err != null ) {
         reject(err)
       } else {
+        console.log('(D): loadDaySummary(): ', row)
         resolve(row)
       }
     })

@@ -49,7 +49,7 @@ import { ViewTimeLogTable, EditTimeBlock } from './TimeBlock.js';
 import { DayRatingGroup, customRatingIcons } from './DayRating.js';
 
 // TODO: rename 'timeslog' => 'timeRecords'; REQUIRES SCHEMA COMPATIBILITY UPDATE
-const STATE_VERSION = "0.5.0"
+const STATE_VERSION = "0.6.0"
 
 // TODO: Where does this spec. belong?
 // const TIME_RECORD_SCHEMA = {
@@ -78,7 +78,13 @@ const TIME_LOG_SCHEMA = {
 function formatAndWriteData(session_id, timelog) {
   let fmtTimeLog = {}
   fmtTimeLog.timeRecords = timelog.timeRecords.map(record => {
-    let o = {...record, start: record.start.toISOString(), end: record.end.toISOString()}
+    let o = {
+      ...record, 
+      start: record.start.toISOString(), 
+      end: record.end.toISOString(),
+      categories: JSON.stringify(record.categories),
+      topic: JSON.stringify(record.topic)
+    }
     delete o['date']
     return o
   })
@@ -114,8 +120,29 @@ function parseDateDataV2or3(timeRecords) {
   })
 }
 
-function parseDateData(timeRecords) {
-  return timeRecords.map(record => ({...record, start: dayjs(record.start), end: dayjs(record.end)}))
+function parseTimeRecordData(timeRecords) {
+  return timeRecords.map(record => ({
+    ...record, 
+    start: dayjs(record.start), 
+    end: dayjs(record.end),
+    categories: JSON.parse(record.categories),
+    topic: JSON.parse(record.topic),
+  }))
+}
+
+function parseDaySummary(daySummary) {
+  return {
+    v: daySummary.v,
+    rating: daySummary.rating,
+    onSite: daySummary.onSite,
+    summary: {
+      start: daySummary.datStart,
+      end: daySummary.dayEnd,
+      duration: daySummary.duration,
+      break: daySummary.break,
+      unknown: daySummary.unknown,
+    }
+  }
 }
 
 function sortAndWriteTimesLog(session_id, prevTimeLog, modTimeRecords) {
@@ -142,7 +169,7 @@ function sortAndWriteTimesLog(session_id, prevTimeLog, modTimeRecords) {
     },
     timeRecords: modTimeRecords,
   }
-  formatAndWriteData(session_id, modTimeLog)  // Question: Stuff this in the action "event handler" ? => no.
+  // formatAndWriteData(session_id, modTimeLog)  // Question: Stuff this in the action "event handler" ? => no.
   return modTimeLog
 }
 
@@ -164,8 +191,9 @@ function timeLogReducer(prevTimeLog, action) {
         ...prevTimeLog,
         rating: action.rating,
         timeRecords: [...prevTimeLog.timeRecords],
+        dataSyncRequired: true,
       }
-      formatAndWriteData(action.session_id, modTimeLog)
+      // formatAndWriteData(action.session_id, modTimeLog)
       return modTimeLog
     }
     case "ModifyOnSite": {
@@ -173,27 +201,43 @@ function timeLogReducer(prevTimeLog, action) {
         ...prevTimeLog,
         onSite: action.onSite,
         timeRecords: [...prevTimeLog.timeRecords],
+        dataSyncRequired: true,
       }
-      formatAndWriteData(action.session_id, modTimeLog)
+      // formatAndWriteData(action.session_id, modTimeLog)
       return modTimeLog
     }
     case "AddTimeRecord": {
       const updateTimesLog = [...prevTimeLog.timeRecords, action.timeRecord]
-      return sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog)
+      return {
+        ...sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog),
+        dataSyncRequired: true,
+      }
     }
     case "ChangeTimeRecord": {
       const updateTimesLog = prevTimeLog.timeRecords.map((timeRecord) => (timeRecord.id === action.timeRecord.id) ? action.timeRecord : timeRecord)
-      return sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog)
+      return {
+        ...sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog),
+        dataSyncRequired: true,
+      }
     }
     case "DeleteTimeRecord": {
       const updateTimesLog = prevTimeLog.timeRecords.filter(timeRecord => (timeRecord.id !== action.timeRecordId))
-      return sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog)
+      return {
+        ...sortAndWriteTimesLog(action.session_id, prevTimeLog, updateTimesLog),
+        dataSyncRequired: true,
+      }
     }
     case "CancelChangeTimeRecord": {
       return prevTimeLog
     }
     case "ReloadTimeLog": {
       return action.timeLogData
+    }
+    case "DataSyncComplete": {
+      return {
+        ...prevTimeLog,
+        dataSyncRequired: action.dataSyncRequired
+      }
     }
     default: {
       throw Error('Action not supported: ' + action.type)
@@ -242,6 +286,12 @@ function App() {
     // TODO: Add other initializations
     //    Load isDev flag
     //    Load data
+    // 
+    // NOTE: Use empty args to call single time for initialization. However, it will be called 2x in "dev" mode.
+    // useEffect notes:
+    //   https://react.dev/reference/react/useEffect#usage
+    //   https://stackoverflow.com/questions/53120972/how-to-call-loading-function-with-react-useeffect-only-once
+
     async function loadAndSetInitialStates () { 
       loadCfgCategories().then(v => { if (v != null) { setCfgCategories(v)} })
       isDevFnc().then(v => setIsDev(v))
@@ -252,6 +302,20 @@ function App() {
     return
   }, [])
   console.log('(D): cfgCategories: ' + JSON.stringify(cfgCategories))  // Note: this may not properly reflect the "actual" state
+
+  useEffect(() => {
+    // TODO: Add db error handling
+    async function syncTimelogData() {
+      formatAndWriteData(null, timeLog)
+      dispatchTimeLog({
+        type: "DataSyncComplete",
+        dataSyncRequired: false,
+      })
+    }
+    if ( timeLog.dataSyncRequired ) {
+      syncTimelogData();
+    }
+  }, [ timeLog.dataSyncRequired ])
 
   const handleTimeRecordEvent = (action) => {
     console.log('(D): handleTimeRecordEvent(): ', action.type)
@@ -310,6 +374,7 @@ function App() {
   const handleReloadData = async (e) => {
     // TODO: use dispatchTimeLog() instead of setTimesLog() and setDayRating()
     // const data = await loadData(session_id)
+    console.log('(F): handleReloadData()')
     const timeRecords = await loadTimeRecords()
     const daySummary = await loadDaySummary()
     if (timeRecords == null || daySummary == null) {
@@ -321,13 +386,13 @@ function App() {
     // TODO: Handle this in the utils.js "api" part...
     if ( timeRecords && Array.isArray(timeRecords) 
           && daySummary && typeof daySummary == 'object' && !Array.isArray(daySummary) 
-          && daySummary.v === "1.0.0"
+          && daySummary.v === STATE_VERSION
     ) {
       setNextTimeRecordId(timeRecords.reduce(timeRecordsMaxId, 0) + 1)
       let data = {
-        daySummary: daySummary,
+        ...parseDaySummary(daySummary),
       }
-      data.timeRecords = parseDateData(timeRecords)
+      data.timeRecords = parseTimeRecordData(timeRecords)
       dispatchTimeLog({
         type: "ReloadTimeLog",
         timeLogData: data,
