@@ -26,7 +26,9 @@ async function connect_db() {
   return new Promise((resolve, reject) => {
     console.log('(I): connect_db()')
     if ( _db == null ) {
-      _db = new sqlite3.Database(mainUtils.absFileName(""), (err) => {
+      const db_fname = mainUtils.absFileName("")
+      console.log('(I): Connecting to DB: ', db_fname)
+      _db = new sqlite3.Database(db_fname, (err) => {
         if ( err != null ) {
           return reject(err);
         } else {
