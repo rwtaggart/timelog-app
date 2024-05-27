@@ -16,27 +16,65 @@
  * 
  */
 
-const sqlite3 = require('sqlite3');
+const sqlite3 = require('sqlite3').verbose();
 const mainUtils = require('./main_utils.js')
 
 let _db = null;
 
 
 async function connect_db() {
-  if ( _db == null ) {
-    _db = new sqlite3.Database(mainUtils.absFileName(""))
-  }
-  // await new Promise((resolve, reject) => {
-  //   _db.get('SELECT C1 FROM t1 LIMIT 1', (err, row) => {
-  //     if ( err != null ) {
-  //       reject(err)
-  //     } else {
-  //       resolve(row)
-  //     }
-  //   });
-  // })
+  return new Promise((resolve, reject) => {
+    console.log('(I): connect_db()')
+    if ( _db == null ) {
+      _db = new sqlite3.Database(mainUtils.absFileName(""), (err) => {
+        if ( err != null ) {
+          return reject(err);
+        } else {
+          console.log('(I): Connected to DB!')
+          return resolve(err);
+        }
+      });
+    } else {
+      // TODO: Check for valid DB connection?
+      return resolve();
+    }
+  });
 }
 
+/**
+ * Re-connect to database (if there's an error)
+ */
+async function reset_db_connection() {
+  return new Promise((resolve, reject) => {
+    if ( _db != null ) {
+      _db.close((err) => {
+        console.error('(E): ', err);
+        _db = null;
+        if ( err != null ) {
+          return reject(err)
+        } else {
+          _db = new sqlite3.Database(mainUtils.absFileName(""), (err) => {
+            if ( err != null ) {
+              return reject(err)
+            } else {
+              return resolve(err)
+            }
+          })
+        }
+      })
+    } else {
+      _db = new sqlite3.Database(mainUtils.absFileName(""), (err) => {
+        if ( err != null ) {
+          return reject(err)
+        } else {
+          return resolve(err)
+        }
+      })
+    }
+  })
+}
+
+// ****** REFERENCE ******
 // const TIME_LOG_SCHEMA = {
 //   v: STATE_VERSION, 
 //   rating: null,
@@ -62,6 +100,7 @@ async function connect_db() {
 //   categories: [],
 //   topic: [],
 // }
+// ********* END *********
 
 /**
  * Initialize SQLite database tables
@@ -120,7 +159,7 @@ async function init_db_tables() {
 
 async function insertTimeRecord(timeRecord) {
   await connect_db()
-  const insertTimeRecordSql = "INSERT INTO timeRecord \
+  const insertTimeRecordSql = "INSERT OR REPLACE INTO timeRecord \
                                (id, start, end, duration, name, description, categories, topic) \
                                VALUES \
                                ($id, $start, $end, $duration, $name, $description, $categories, $topic) \
@@ -148,6 +187,43 @@ async function insertTimeRecord(timeRecord) {
   })
 }
 
+async function insertManyTimeRecords(timeRecords) {
+  await connect_db()
+  console.log('(D): INSERT MANY: ', timeRecords.length, '\n', timeRecords)
+  const insertManyTimeRecordsSql = "INSERT OR REPLACE INTO timeRecord \
+                                    (id, start, end, duration, name, description, categories, topic) \
+                                    VALUES \
+                                    ($id, $start, $end, $duration, $name, $description, $categories, $topic) \
+                                    ".replace(/\s+/, ' ')
+
+  await new Promise((resolve, reject) => {
+    _db.serialize(() => {
+      _db.run('BEGIN TRANSACTION')
+      timeRecords.map(tr => {
+        sqlParams = {
+          $id:           tr.id,
+          $start:        tr.start,
+          $end:          tr.end,
+          $duration:     tr.duration,
+          $name:         tr.name,
+          $description:  tr.description,
+          $categories:   tr.categories,
+          $topic:        tr.topic,
+        }
+        db.run(insertManyTimeRecordsSql, sqlParams)
+      })
+      _db.run('COMMIT', (err) => {
+        if ( err != null ) {
+          return reject(err)
+        } else {
+          return resolve(err)
+        }
+      })
+    })
+  })
+}
+
+// TODO: USE INSERT OR REPLACE ABOVE INSTEAD OF SEPARATE UPDATE FUNCTION?
 async function updateTimeRecord(timeRecord) {
   await connect_db()
   const updateTimeRecordSql = "UPDATE timeRecord \
@@ -214,9 +290,9 @@ async function loadTimeRecords() {
   return await new Promise((resolve, reject) => {
     _db.all(selectTimeRecordsSql, (err, rows) => {
       if ( err != null ) {
-        reject(err)
+        return reject(err)
       } else {
-        resolve(rows)
+        return resolve(rows)
       }
     })
   })
@@ -226,11 +302,11 @@ async function loadDaySummary() {
   await connect_db()
   const selectDaySummarySql = "SELECT * FROM daySummary";
   return await new Promise((resolve, reject) => {
-    _db.all(selectDaySummarySql, (err, rows) => {
+    _db.get(selectDaySummarySql, (err, row) => {
       if ( err != null ) {
         reject(err)
       } else {
-        resolve(rows)
+        resolve(row)
       }
     })
   })
@@ -238,7 +314,9 @@ async function loadDaySummary() {
 
 module.exports = {
   init_db_tables: init_db_tables,
+  reset_db_connection: reset_db_connection,
   insertTimeRecord: insertTimeRecord,
+  insertManyTimeRecords: insertManyTimeRecords,
   updateTimeRecord: updateTimeRecord,
   updateDaySummary: updateDaySummary,
   loadTimeRecords: loadTimeRecords,

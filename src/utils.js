@@ -154,14 +154,40 @@ export function hasAPI(name) {
 }
 
 export async function writeData(session_id, data) {
+  console.warn('(W): NO LONGER SUPPORTED!')
   hasAPI('dataStore')
-  return await window.dataStore.write(session_id, data)
+  await window.dataStore.writeAllTimeRecords(data.timeRecords)
+  await window.dataStore.writeDaySummary(data.daySummary)
 }
 
 export async function loadData(session_id) {
   console.log('(D): loadData session_id: ', typeof session_id)
+  console.warn('(E): NO LONGER SUPPORTED!')
+  // hasAPI('dataStore')
+  // return await window.dataStore.load(session_id)
+}
+
+export async function writeTimeRecord(session_id) {
+  console.log('(D): writeTimeRecord session_id: ', typeof session_id)
   hasAPI('dataStore')
-  return await window.dataStore.load(session_id)
+  return await window.dataStore.writeTimeRecord(session_id)
+}
+export async function writeDaySummary(session_id) {
+  console.log('(D): writeDaySummary session_id: ', typeof session_id)
+  hasAPI('dataStore')
+  return await window.dataStore.writeDaySummary(session_id)
+}
+
+export async function loadTimeRecords(session_id) {
+  console.log('(D): loadTimeRecords session_id: ', typeof session_id)
+  hasAPI('dataStore')
+  return await window.dataStore.loadTimeRecords(session_id)
+}
+
+export async function loadDaySummary(session_id) {
+  console.log('(D): loadDaySummary session_id: ', typeof session_id)
+  hasAPI('dataStore')
+  return await window.dataStore.loadDaySummary(session_id)
 }
 
 export async function loadCfgCategories() {

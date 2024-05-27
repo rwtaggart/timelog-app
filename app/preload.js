@@ -38,8 +38,14 @@ contextBridge.exposeInMainWorld('appMeta', {
 })
 
 contextBridge.exposeInMainWorld('dataStore', {
-  write: (session_id, data) => ipcRenderer.invoke('datastore.write', session_id, data),
-  load:  (session_id) => ipcRenderer.invoke('datastore.load', session_id)
+  // write: (session_id, data) => ipcRenderer.invoke('dataStore.write', session_id, data),
+  // load:  (session_id) => ipcRenderer.invoke('dataStore.load', session_id),
+  
+  writeTimeRecord: (data) => ipcRenderer.invoke('dataStore.writeTimeRecord', data),
+  writeAllTimeRecords: (data) => ipcRenderer.invoke('dataStore.writeAllTimeRecords', data),
+  writeDaySummary: (data) => ipcRenderer.invoke('dataStore.writeDaySummary', data),
+  loadTimeRecords:  () => ipcRenderer.invoke('dataStore.loadTimeRecords'),
+  loadDaySummary:  () => ipcRenderer.invoke('dataStore.loadDaySummary'),
 })
 contextBridge.exposeInMainWorld('config', {
   categories: {

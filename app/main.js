@@ -6,6 +6,7 @@ const fs = require('fs')
 const parseArgs = require('minimist')
 
 const appUtils = require('./main_utils.js')
+const dbUtils = require('./db_utils.js')
 
 console.log('(D): Running main.js ...')
 
@@ -148,10 +149,31 @@ app.whenReady()
   })
 })
 .then(() => {
+  return new Promise((resolve, reject) => {
+    dbUtils.init_db_tables()
+    .then(resolve)
+    .catch(() => {
+      console.error('(E) [main]: ', err.message)
+      // TODO: Use createErrorWindow() instead of new Notification()
+      // new Notification({title: err.name, body: err.message}).show()
+      createErrorWindow(err)
+      return reject(err)
+    })
+  })
+})
+.then(() => {
   console.log('(D): whenReady(): ', appUtils, appUtils.writeDataJSON)
   ipcMain.handle('appMeta.isDev', () => isDev)
-  ipcMain.handle('datastore.write', appUtils.writeDataJSON)
-  ipcMain.handle('datastore.load',  appUtils.loadDataJSON)
+  // ipcMain.handle('datastore.write', appUtils.writeDataJSON)
+  // ipcMain.handle('datastore.load',  appUtils.loadDataJSON)
+
+  ipcMain.handle('dataStore.writeTimeRecord', dbUtils.insertTimeRecord)
+  ipcMain.handle('dataStore.writeAllTimeRecords', (ipcEvent, data) => { dbUtils.insertManyTimeRecords(data); })
+  ipcMain.handle('dataStore.writeDaySummary', dbUtils.updateDaySummary)
+
+  ipcMain.handle('dataStore.loadTimeRecords', dbUtils.loadTimeRecords)
+  ipcMain.handle('dataStore.loadDaySummary',  dbUtils.loadDaySummary)
+
   ipcMain.handle('config.categories.load',  appUtils.loadCfgCategories)
   ipcMain.handle('config.categories.edit',  appUtils.editCfgCategories)
   ipcMain.handle('config.absFileName',      appUtils.absFileName)
@@ -168,7 +190,7 @@ app.whenReady()
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', function () {
-  // if (process.platform !== 'darwin') 
+  // if (process.platform !== 'darwin')
   app.quit()
 })
 

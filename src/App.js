@@ -38,7 +38,7 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, writeData, loadData, loadCfgCategories, editCfgCategories, absFileName, isDev as isDevFnc} from './utils.js';
+import { parseDateTime, writeData, loadData, writeTimeRecord, writeDaySummary, loadTimeRecords, loadDaySummary,loadCfgCategories, editCfgCategories, absFileName, isDev as isDevFnc} from './utils.js';
 
 import { dayjs, dateFmt, timeFmt, sumDuration, sumUnknownDuration, diffDurationFmt, durationFmt } from './dayjs_utils.js';
 
@@ -68,7 +68,7 @@ const TIME_LOG_SCHEMA = {
     duration: null,
     break: null,
     unknown: null,
-  }
+  },
 }
 
 /** 
@@ -76,12 +76,24 @@ const TIME_LOG_SCHEMA = {
  * FIXME: The "default" JSON.stringify() behavior doesn't appear to work as expected with electron...
  */
 function formatAndWriteData(session_id, timelog) {
-  let fmtTimeLog = { ...timelog }
+  let fmtTimeLog = {}
   fmtTimeLog.timeRecords = timelog.timeRecords.map(record => {
     let o = {...record, start: record.start.toISOString(), end: record.end.toISOString()}
     delete o['date']
     return o
   })
+  // FIXME - saving data is totally broken.
+  // vvv WAT vvv?
+  // ...Object.keys(timelog).filter((k) => (k !== 'timeRecords' || k !== 'summary')).reduce((o, k, idx) => {o[k]=; return o}, {})
+  let fmtSummary = { ...timelog }
+  delete fmtSummary['timeRecords']
+  delete fmtSummary['summary']
+  fmtTimeLog.daySummary = {
+    ...fmtSummary,
+    ...timelog.summary,
+    dayStart: timelog.summary.start,
+    dayEnd: timelog.summary.end,
+  }
   writeData(session_id, fmtTimeLog)
 }
 
@@ -133,6 +145,17 @@ function sortAndWriteTimesLog(session_id, prevTimeLog, modTimeRecords) {
   formatAndWriteData(session_id, modTimeLog)  // Question: Stuff this in the action "event handler" ? => no.
   return modTimeLog
 }
+
+// ACTIVE -- BROKEN WITH SQLITE DB
+// FIXME: UPDATE PATTERN FOR ASYNC DB SYNCS
+// 
+// TODO: Use "DB Sync" design pattern
+// useReducer with Database queries:
+// - "React useReducer async data fetch"
+//   https://stackoverflow.com/a/53146965
+// 
+// - Synchronozing with effects:
+//   https://react.dev/learn/synchronizing-with-effects
 
 function timeLogReducer(prevTimeLog, action) {
   switch(action.type) {
@@ -286,57 +309,31 @@ function App() {
 
   const handleReloadData = async (e) => {
     // TODO: use dispatchTimeLog() instead of setTimesLog() and setDayRating()
-    const data = await loadData(session_id)
-    if (data == null) {
+    // const data = await loadData(session_id)
+    const timeRecords = await loadTimeRecords()
+    const daySummary = await loadDaySummary()
+    if (timeRecords == null || daySummary == null) {
       console.log('(D): loadData() returned null')
       return
     }
-    console.log('(D): handleReloadData: ', `${data.length}`, `${data}`)
+    console.log('(D): handleReloadData: ', `${timeRecords.length}`, `${timeRecords}`)
     // FIXME: handle multiple versions of data...
     // TODO: Handle this in the utils.js "api" part...
-    if (data && typeof data === 'object') {
-      if (Array.isArray(data)) {
-        // OLD - deprecated. TODO: TAKE OUT.
-        // settimesLog(data)
-        setNextTimeRecordId(data.reduce(timeRecordsMaxId, 0) + 1)
-        dispatchTimeLog({
-          type: "ReloadTimeLog_v0.1.0",
-          timeslogArray: data,
-        })
-      } else if (data && (data.v === "0.2.0" || data.v === "0.3.0")) {
-        // TODO: Fix the "rating" from [1,3] to [-2,+2] scale.
-        // setDayRating(data.rating)
-        // settimesLog(data.timeslog)
-        console.log('(D): Loading older version of data.')
-        setNextTimeRecordId(data.timeslog.reduce(timeRecordsMaxId, 0) + 1)
-        data.timeRecords = parseDateDataV2or3(data.timeslog)
-        const beginRecord = data.timeRecords.at(0)
-        const endRecord = data.timeRecords.at(-1)
-        data.summary = {
-          date: dateFmt(beginRecord.start),
-          start: beginRecord != null ? timeFmt(beginRecord.start) : null,
-          end: endRecord != null ? timeFmt(endRecord.end) : null,
-          duration: diffDurationFmt(beginRecord.start, beginRecord.end),
-          break: null,
-          unknown: null,
-        }
-        console.log('(D): timeRecords: ', data.timeRecords)
-        dispatchTimeLog({
-          type: "ReloadTimeLog",
-          timeLogData: data,
-        })
-      } else if (data && (data.v === "0.4.0" || data.v === "0.5.0")) {
-        setNextTimeRecordId(data.timeRecords.reduce(timeRecordsMaxId, 0) + 1)
-        data.timeRecords = parseDateData(data.timeRecords)
-        dispatchTimeLog({
-          type: "ReloadTimeLog",
-          timeLogData: data,
-        })
-      } else {
-        throw Error("Unable to load data - version mismatch")
+    if ( timeRecords && Array.isArray(timeRecords) 
+          && daySummary && typeof daySummary == 'object' && !Array.isArray(daySummary) 
+          && daySummary.v === "1.0.0"
+    ) {
+      setNextTimeRecordId(timeRecords.reduce(timeRecordsMaxId, 0) + 1)
+      let data = {
+        daySummary: daySummary,
       }
+      data.timeRecords = parseDateData(timeRecords)
+      dispatchTimeLog({
+        type: "ReloadTimeLog",
+        timeLogData: data,
+      })
     } else {
-      throw Error("Unable to load data")
+      throw Error("Unable to load data - version mismatch")
     }
   }
 
@@ -537,7 +534,7 @@ function App() {
           <Typography><b>Active:</b> <span className="right">{timeLog.summary.active}</span></Typography>
           <Typography><b>Break:</b> <span className="right">{timeLog.summary.break}</span></Typography>
           <Typography><b>Unknown:</b> <span className="right">{timeLog.summary.unknown}</span></Typography>
-          {/* ACTIVE: Break & Unknown "labels" */}
+          {/* FIXME: Break & Unknown "labels" */}
         </Stack>
           <ViewTimeLogTable 
             log={timeLog.timeRecords} 
