@@ -85,6 +85,12 @@ Create a binary executable for electron
 # > open ./out/time-log-ui-darwin-arm64/time-log-ui.app  # test app
 ```
 
+### Create a DMG MacOS image
+https://www.electronjs.org/docs/latest/tutorial/tutorial-packaging
+https://www.electronforge.io/config/makers/dmg
+https://js.electronforge.io/interfaces/_electron_forge_maker_dmg.MakerDMGConfig.html
+https://www.electron.build/configuration/dmg
+
 
 # Project setup
 React dirs: ./src and ./public
