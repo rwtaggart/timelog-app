@@ -75,6 +75,11 @@ Create a binary executable for electron
 > unset ELECTRON_IS_DEV
 > npm run build # build production react app
 > npm run make  # create distributable in ./out
+
+# DMG:
+> open  'out/make/Time Log-1.7.1-arm64.dmg'
+
+# ZIP
 > open "./out/Time Log-darwin-arm64/Time Log.app"
 > cp -r "./out/Time Log-darwin-arm64/Time Log.app" "$HOME/Applications/Time Log.app" 
 
