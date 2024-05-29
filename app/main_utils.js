@@ -51,9 +51,12 @@ const DEFAULT_CFG_DIR_NAME = (process.env['CFG_DIR_NAME'] != null)
   : (process.env['DEV'] == null)
     ? path.join(os.homedir(), '.config/timelog/')
     : './timelog/';
+const DEFAULT_CFG_SESSION_ID = "";
+
 let sessionPrefix = DEFAULT_SESSION_PREFIX
 let outDirName = DEFAULT_OUT_DIR_NAME
 let cfgDirName = DEFAULT_CFG_DIR_NAME
+let sessionId = DEFAULT_CFG_SESSION_ID;
 let activeSessionDate = new Date()
 
 function setOutDirName(dirname) {
@@ -78,6 +81,14 @@ function getSessionPrefix() {
   return sessionPrefix
 }
 
+function getSessionId() {
+  return sessionId;
+}
+
+function setSessionId(sid) {
+  sessionId = sid;
+}
+
 function dateFileFmt(date) {
   if (date instanceof Date && !isNaN(date))
     return format(date, 'yyyy-MMM-dd')
@@ -85,19 +96,19 @@ function dateFileFmt(date) {
     return "Invalid Date"
 }
 
-function fileName(date, session_id) {
+function fileName(date) {
   // FIXME: How is it possible for typeof session_id !== string ???
-  if (typeof session_id !== 'string') {
-    console.log('(E): fileName(): session_id is not a string (FIXME)')
+  if (typeof sessionId !== 'string') {
+    console.log('(E): fileName(): session_id is not a string (FIXME)', sessionId)
   }
   // console.log('(D): fileName session_id: ', session_id == null, session_id === "", session_id)
-  let session_str = (typeof session_id !== 'string' || session_id === "") ? "" : `_${session_id}`
+  let session_str = (typeof sessionId !== 'string' || sessionId === "") ? "" : `_${sessionId}`
   return `${sessionPrefix}_${dateFileFmt(date)}${session_str}.tlog`
   // return `${sessionPrefix}_${dateFileFmt(new Date())}.tlog`
 }
 
-function absFileName(session_id) {
-  const fname = path.join(outDirName, fileName(activeSessionDate, session_id))
+function absFileName() {
+  const fname = path.join(outDirName, fileName(activeSessionDate))
   // console.log('(D): absFileName(): ', session_id==null, session_id==="", typeof session_id, session_id, fname)
   return fname
 }
@@ -204,5 +215,7 @@ module.exports = {
   editCfgCategories: editCfgCategories,
   checkOutDir: checkOutDir,
   absFileName: absFileName,
+  getSessionId: getSessionId,
+  setSessionId: setSessionId,
   OutputDirectoryMissingError: OutputDirectoryMissingError,
 }

@@ -150,7 +150,7 @@ app.whenReady()
 })
 .then(() => {
   return new Promise((resolve, reject) => {
-    dbUtils.init_db_tables()
+    dbUtils.connect_db()
     .then(resolve)
     .catch((err) => {
       console.error('(E) [main]: ', err.message)
@@ -167,16 +167,18 @@ app.whenReady()
   // ipcMain.handle('datastore.write', appUtils.writeDataJSON)
   // ipcMain.handle('datastore.load',  appUtils.loadDataJSON)
 
+  
   ipcMain.handle('dataStore.writeTimeRecord', dbUtils.insertTimeRecord)
   ipcMain.handle('dataStore.writeAllTimeRecords', (ipcEvent, data) => { dbUtils.insertManyTimeRecords(data); })
   ipcMain.handle('dataStore.writeDaySummary', (ipcEvent, data) => { dbUtils.updateDaySummary(data); })
-
+  
   ipcMain.handle('dataStore.loadTimeRecords', dbUtils.loadTimeRecords)
   ipcMain.handle('dataStore.loadDaySummary',  dbUtils.loadDaySummary)
-
+  
   ipcMain.handle('config.categories.load',  appUtils.loadCfgCategories)
   ipcMain.handle('config.categories.edit',  appUtils.editCfgCategories)
   ipcMain.handle('config.absFileName',      appUtils.absFileName)
+  ipcMain.handle('config.setSessionId', (ipcEvent, sessionId) => { appUtils.setSessionId(sessionId); })
   createWindow()
 
   app.on('activate', function () {

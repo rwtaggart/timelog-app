@@ -21,24 +21,50 @@ const mainUtils = require('./main_utils.js')
 
 let _db = null;
 
+async function __create_db_connection() {
+  return new Promise((resolve, reject) => {
+    console.log('(D): __create_db_connection()')
+    const db_fname = mainUtils.absFileName()
+    console.log('(I): Connecting to DB: ', db_fname)
+    _db = new sqlite3.Database(db_fname, async (err) => {
+      if ( err != null ) {
+        return reject(err);
+      } else {
+        console.log('(I): Connected to DB!')
+        return resolve(err);
+      }
+    });
+    _db.on('close', () => {
+      console.log('(I): DB connection closed.');
+      // _db = null;
+    })
+  }).then(async () => {
+    return await init_db_tables();
+  })
+}
 
 async function connect_db() {
   return new Promise((resolve, reject) => {
     console.log('(I): connect_db()')
     if ( _db == null ) {
-      const db_fname = mainUtils.absFileName("")
-      console.log('(I): Connecting to DB: ', db_fname)
-      _db = new sqlite3.Database(db_fname, (err) => {
-        if ( err != null ) {
-          return reject(err);
-        } else {
-          console.log('(I): Connected to DB!')
-          return resolve(err);
-        }
-      });
+      return __create_db_connection().then(resolve).catch(reject)
+    } else if ( _db.open === true ) {
+      if ( _db.filename === mainUtils.absFileName() ) {
+        return resolve();
+      } else {
+        console.log('(D): Attempting to close and connect a new database file.')
+        _db.close((err) => {
+          if ( err != null ) {
+            console.error('(E): Error attempting to close DB: ', err)
+            return reject(err);
+          }
+          _db = null;
+          return __create_db_connection().then(resolve).catch(reject)
+        });
+      }
     } else {
-      // TODO: Check for valid DB connection?
-      return resolve();
+      // SHOULD NOT GET HERE!
+      reject('(E): DB connection is in invalid state.')
     }
   });
 }
@@ -55,7 +81,7 @@ async function reset_db_connection() {
         if ( err != null ) {
           return reject(err)
         } else {
-          _db = new sqlite3.Database(mainUtils.absFileName(""), (err) => {
+          _db = new sqlite3.Database(mainUtils.absFileName(), (err) => {
             if ( err != null ) {
               return reject(err)
             } else {
@@ -65,7 +91,7 @@ async function reset_db_connection() {
         }
       })
     } else {
-      _db = new sqlite3.Database(mainUtils.absFileName(""), (err) => {
+      _db = new sqlite3.Database(mainUtils.absFileName(), (err) => {
         if ( err != null ) {
           return reject(err)
         } else {
@@ -111,7 +137,7 @@ async function reset_db_connection() {
  * FIXME: string replace isn't working for sqlite3 .schema command...
  */
 async function init_db_tables() {
-  await connect_db()
+  console.log('(D): init_db_tables()');
   const timeRecordSql = 'CREATE TABLE IF NOT EXISTS timeRecord (  \
                            id INT PRIMARY KEY NOT NULL,  \
                            start TEXT,                   \
@@ -161,6 +187,7 @@ async function init_db_tables() {
 
 async function insertTimeRecord(timeRecord) {
   await connect_db()
+  console.log('(D): timeRecord: INSERT ONE: ', '\n', timeRecord)
   const insertTimeRecordSql = "INSERT OR REPLACE INTO timeRecord \
                                (id, start, end, duration, name, description, categories, topic) \
                                VALUES \
@@ -191,7 +218,7 @@ async function insertTimeRecord(timeRecord) {
 
 async function insertManyTimeRecords(timeRecords) {
   await connect_db()
-  console.log('(D): INSERT MANY: ', timeRecords.length, '\n', timeRecords)
+  console.log('(D): timeRecords: INSERT MANY: ', timeRecords.length, '\n', timeRecords)
   const insertManyTimeRecordsSql = "INSERT OR REPLACE INTO timeRecord \
                                     (id, start, end, duration, name, description, categories, topic) \
                                     VALUES \
@@ -260,6 +287,7 @@ async function updateTimeRecord(timeRecord) {
 
 async function updateDaySummary(daySummary) {
   await connect_db()
+  console.log('(D): daySummary: INSERT ONE: ', '\n', daySummary)
   const updateDaySummarySql = "INSERT OR REPLACE INTO daySummary \
                                (DAY_SUMMARY, v, rating, onSite, dayStart, dayEnd, duration, break, unknown) \
                                VALUES \
@@ -319,6 +347,7 @@ async function loadDaySummary() {
 }
 
 module.exports = {
+  connect_db: connect_db,
   init_db_tables: init_db_tables,
   reset_db_connection: reset_db_connection,
   insertTimeRecord: insertTimeRecord,

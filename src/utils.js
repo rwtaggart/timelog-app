@@ -202,6 +202,11 @@ export async function editCfgCategories() {
   return await window.config.categories.edit()
 }
 
+export async function setSessionId(session_id) {
+  hasAPI('config')
+  await window.config.setSessionId(session_id)
+}
+
 export async function absFileName(session_id) {
   try {
     hasAPI('config')

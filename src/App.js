@@ -38,7 +38,7 @@ import RepeatOnIcon from '@mui/icons-material/RepeatOn';
 import TableChartIcon from '@mui/icons-material/TableChart';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { parseDateTime, writeData, loadData, writeTimeRecord, writeDaySummary, loadTimeRecords, loadDaySummary,loadCfgCategories, editCfgCategories, absFileName, isDev as isDevFnc} from './utils.js';
+import { parseDateTime, writeData, loadData, writeTimeRecord, writeDaySummary, loadTimeRecords, loadDaySummary,loadCfgCategories, editCfgCategories, absFileName, setSessionId as cfg_setSessionId, isDev as isDevFnc} from './utils.js';
 
 import { dayjs, dateFmt, timeFmt, sumDuration, sumUnknownDuration, diffDurationFmt, durationFmt } from './dayjs_utils.js';
 
@@ -317,6 +317,15 @@ function App() {
     }
   }, [ timeLog.dataSyncRequired ])
 
+  useEffect(() => {
+    // TODO: Add db error handling
+    async function syncSessionId() {
+      cfg_setSessionId(session_id);
+      absFileName(session_id != null ? session_id : "").then(path => setTimeLogDir(path));
+    }
+    syncSessionId();
+  }, [ session_id ])
+
   const handleTimeRecordEvent = (action) => {
     console.log('(D): handleTimeRecordEvent(): ', action.type)
     if (action.type == "AddTimeRecord") {
@@ -446,6 +455,10 @@ function App() {
     })
   }
 
+  const handleSessionIdEvent = (e) => {
+      setSessionId(e.target.value);
+  }
+
   // useEffect(() => {
   //   // Store state to disk upon changes
   //   // FIXME: THIS RUNS EVERY TIME AND WILL OVERWRITE VALID FILES.
@@ -561,7 +574,7 @@ function App() {
                     label="Session ID"  
                     value={session_id}
                     // FIXME: this doesn't appear to work as expected
-                    onChange={(e) => {setSessionId(e.target.value); absFileName(e.target.value != null ? e.target.value : "").then(path => setTimeLogDir(path))}}
+                    onChange={handleSessionIdEvent}
                     // onKeyPress={handleKeyPress}
                     // onBlur={(e) => setSessionId(e.target.value)}
                     // helperText="mm:ss (am/pm)"

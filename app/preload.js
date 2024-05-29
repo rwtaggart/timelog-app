@@ -54,5 +54,6 @@ contextBridge.exposeInMainWorld('config', {
     // init:  (cb) => ipcRenderer.on('init:config:categories:load', cb),
     // init:  (cb) => ipcRenderer.on('init:config:categories:load', cb),
   },
-  absFileName: () => ipcRenderer.invoke('config.absFileName')
+  absFileName: () => ipcRenderer.invoke('config.absFileName'),
+  setSessionId: (session_id) => ipcRenderer.invoke('config.setSessionId', session_id),
 })
