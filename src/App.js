@@ -80,8 +80,8 @@ function formatAndWriteData(session_id, timelog) {
   fmtTimeLog.timeRecords = timelog.timeRecords.map(record => {
     let o = {
       ...record, 
-      start: record.start.toISOString(), 
-      end: record.end.toISOString(),
+      start: record.start.format(), 
+      end: record.end.format(),
       categories: JSON.stringify(record.categories),
       topic: JSON.stringify(record.topic)
     }
