@@ -135,6 +135,7 @@ app.whenReady()
   // TODO: Add other "initialization" checkers here.
   // Check: Config Dir, Output Dir, 
   // Optional Checks: categories.json file - don't display a warning if missing.
+  // Q: Is a new Promise really required here?
   return new Promise((resolve, reject) => {
     appUtils.checkOutDir()
     .then(resolve)
@@ -149,8 +150,12 @@ app.whenReady()
   })
 })
 .then(() => {
+  // Q: Is a new Promise really required here?
   return new Promise((resolve, reject) => {
-    dbUtils.connect_db()
+    return Promise.all([
+      dbUtils.connect_db(),
+      dbUtils.connect_logbook_db(),
+    ])
     .then(resolve)
     .catch((err) => {
       console.error('(E) [main]: ', err.message)

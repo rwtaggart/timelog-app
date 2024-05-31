@@ -8,6 +8,8 @@ const fs = require('fs')
 const { spawn } = require('node:child_process')
 const { format } = require('date-fns')
 
+
+/** ERROR OBJECTS */
 class ValueError extends Error {
   constructor(message) {
     super(message)
@@ -38,33 +40,55 @@ class ConfigDirectoryMissingError extends Error {
   }
 }
 
-// TODO: use ~/.config/timelog/logs as the default now.
-const DEFAULT_SESSION_PREFIX = (process.env['PREFIX'] != null) ? process.env['PREFIX'] : 'timelog'
-const DEFAULT_OUT_DIR_NAME = (process.env['OUT_DIR_NAME'] != null)
+
+/** DEFAULT CONFIG VALUES */
+const DEFAULT_SESSION_PREFIX = (process.env['PREFIX'] != null) ? process.env['PREFIX'] : 'timelog';
+const DEFAULT_APP_DIR_NAME = (process.env['OUT_DIR_NAME'] != null)
   ? process.env['OUT_DIR_NAME'] 
   // : './timelog/logs'
   : (process.env['DEV'] == null)
-    ? path.join(os.homedir(), '.timelog/logs')
-    : './timelog/logs';
+    ? path.join(os.homedir(), '.timelog')
+    : './timelog';
+const DEFAULT_LOG_DIR_NAME = 'logs'
+// TODO: use ~/.timelog/config as default for config
 const DEFAULT_CFG_DIR_NAME = (process.env['CFG_DIR_NAME'] != null)
   ? process.env['CFG_DIR_NAME'] 
   : (process.env['DEV'] == null)
     ? path.join(os.homedir(), '.config/timelog/')
     : './timelog/';
-const DEFAULT_CFG_SESSION_ID = "";
+const DEFAULT_SESSION_ID = "";
+const DEFAULT_LOGBOOK_FiLE_NAME = 'logbook.db';
 
 let sessionPrefix = DEFAULT_SESSION_PREFIX
-let outDirName = DEFAULT_OUT_DIR_NAME
+let appDirName = DEFAULT_APP_DIR_NAME;
+let outDirName = DEFAULT_LOG_DIR_NAME;        // TODO: rename 'outDirName' => 'logDirName'
+let logbookName = DEFAULT_LOGBOOK_FiLE_NAME;
 let cfgDirName = DEFAULT_CFG_DIR_NAME
-let sessionId = DEFAULT_CFG_SESSION_ID;
+let sessionId = DEFAULT_SESSION_ID;
 let activeSessionDate = new Date()
 
+
+/** CONFIG UTILITY FUNCTIONS */
+function setAppDirName(dirname) {
+  console.log("(D): setOutDirName(): ", dirname);
+  appDirName = dirname;
+}
+function getAppDirName() {
+  return appDirName;
+}
 function setOutDirName(dirname) {
   console.log("(D): setOutDirName(): ", dirname)
   outDirName = dirname
 }
 function getOutDirName() {
   return outDirName
+}
+function setLogbookName(name) {
+  console.log("(D): setOutDirName(): ", name);
+  logbookName = name;
+}
+function getLogbookName() {
+  return logbookName;
 }
 function setCfgDirName(dirname) {
   console.log("(D): setOutDirName(): ", dirname)
@@ -73,12 +97,16 @@ function setCfgDirName(dirname) {
 function getCfgDirName() {
   return outDirName
 }
-function setSessionPrefix(dirname) {
-  console.log("(D): setOutDirName(): ", sessionPrefix)
-  outDirName = sessionPrefix
+function setSessionPrefix(prefix) {
+  console.log("(D): setOutDirName(): ", prefix);
+  sessionPrefix = prefix;
 }
 function getSessionPrefix() {
-  return sessionPrefix
+  return sessionPrefix;
+}
+
+function getActiveSessionDate() {
+  return activeSessionDate;
 }
 
 function getSessionId() {
@@ -97,6 +125,7 @@ function dateFileFmt(date) {
 }
 
 function fileName(date) {
+  // TODO: rename 'fileName' => 'timeRecordFileName()'?
   // FIXME: How is it possible for typeof session_id !== string ???
   if (typeof sessionId !== 'string') {
     console.log('(E): fileName(): session_id is not a string (FIXME)', sessionId)
@@ -108,20 +137,43 @@ function fileName(date) {
 }
 
 function absFileName() {
-  const fname = path.join(outDirName, fileName(activeSessionDate))
+  // TODO: rename 'absFileName' => 'timeRecordAbsFileName()'?
+  const fname = path.join(appDirName, outDirName, fileName(activeSessionDate))
   // console.log('(D): absFileName(): ', session_id==null, session_id==="", typeof session_id, session_id, fname)
   return fname
 }
 
+function absLogbookFileName() {
+  // Fully-resolved absolute file path for logbook
+  const fname = path.join(appDirName, logbookName)
+  console.log('(D): absLogbookFileName(): ', fname)
+  return fname
+}
+
 async function checkOutDir() {
+  // TODO: Rename 'checkOutDir' => 'checkAppDirs' or 'checkDirs'?
   try {
-    return await new Promise((resolve, reject) => {
-      console.log("(D): checkOutDir(): ", outDirName)
-      fs.stat(outDirName, (err, stats) => {
-        if ( err != null) { return reject(new OutputDirectoryMissingError(err.code, `Missing Output Diretory: ${outDirName}`)) }
-        else { return resolve(stats) }
-      })
-    })
+    return await Promise.all([
+      new Promise((resolve, reject) => {
+        console.log("(D): checkOutDir(): ", appDirName)
+        fs.stat(path.join(appDirName), (err, stats) => {
+          if ( err != null ) {
+            return reject(new OutputDirectoryMissingError(err.code, `Missing Output Diretory: ${appDirName}`)) 
+          }
+          else { return resolve(stats) }
+        })
+      }),
+      new Promise((resolve, reject) => {
+        console.log("(D): checkOutDir(): ", outDirName)
+        let logdir = path.join(appDirName, outDirName)
+        fs.stat(logdir, (err, stats) => {
+          if ( err != null ) {
+            return reject(new OutputDirectoryMissingError(err.code, `Missing Output Diretory: ${logdir}`)) 
+          }
+          else { return resolve(stats) }
+        })
+      }),
+    ])
   } catch (err) {
     throw err
   }
@@ -201,6 +253,7 @@ async function editCfgCategories() {
   // }
 }
 
+
 module.exports = {
   getSessionPrefix: getSessionPrefix,
   setSessionPrefix: setSessionPrefix,
@@ -214,8 +267,13 @@ module.exports = {
   loadCfgCategories: loadCfgCategories,
   editCfgCategories: editCfgCategories,
   checkOutDir: checkOutDir,
+  fileName: fileName,
   absFileName: absFileName,
+  absLogbookFileName: absLogbookFileName,
   getSessionId: getSessionId,
   setSessionId: setSessionId,
+  getSessionPrefix: getSessionPrefix,
+  getSessionDate: getActiveSessionDate,
+  dateFileFmt: dateFileFmt,
   OutputDirectoryMissingError: OutputDirectoryMissingError,
 }

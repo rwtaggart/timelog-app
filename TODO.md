@@ -1,5 +1,8 @@
 # TODO:
-These are the remaining tasks:
+These are the remaining tasks:  
+- Rename folder: `./app` => `./main`
+- Ignore "break" and "personal" records at beginning or end of day.
+
 <ul>
   <li>Render output file name in settings tab</li>
   <li>Update categories config: add colors and render grouping</li>
@@ -42,7 +45,8 @@ These are the things that we've done!
   <li><del>Add new record for time gaps</del></li>
 </ul>
 
-
+<!-- ---------------------------------------- -->
+<!-- 
 # TAKE OUT:
 ```javascript
         <br />
@@ -98,4 +102,4 @@ These are the things that we've done!
               {/* <li><del></del></li> */}
         </span>
         }
-```
+``` -->
